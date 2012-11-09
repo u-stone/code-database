@@ -8,6 +8,7 @@
 #include "ConvertManager.h"
 #include <algorithm>
 #include "FtpConnecter.h"
+#include "Base64.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -354,6 +355,20 @@ void CFileMonDlg::OnBnClickedOk()
 
 void CFileMonDlg::OnBnClickedBtnopenconvertproc()
 {
+	//测试base64加解码的正确性
+	//CString cstr = _T("this is another test 刘国元");
+	//std::string str = "this is a test 刘国元";
+	//Base64 b64;
+	//std::string res=b64.Encode((unsigned char*)str.c_str(), str.size());
+	//int nout = 0;
+	//std::string res2 = b64.Decode(res.c_str(), res.size(), nout);// + " old data: " + res;
+	//char buf[1024] = {0};
+	//int count = GlobalFunc::UnicodeToANSI(cstr, buf, 1024);
+	//CString res3(b64.Encode((unsigned char*)buf, count).c_str());
+	//ZeroMemory(buf, 1024);
+	//count = GlobalFunc::UnicodeToANSI(res3, buf, 1024);
+	//CString res4(b64.Decode(buf, count, nout).c_str());
+
 	CFileDialog dlg(TRUE, _T("exe"), 0, 4|2, _T("可执行文件(.exe)|*.exe||"));
 	CString strProcPath;
 	if (dlg.DoModal() == IDOK)

@@ -7,8 +7,8 @@ using namespace std;
 #define		MAXWAITLISTSIZE		999		//!<记录等待队列的最大数值，超过该值应该提出警报说明机器的性能不行，或者是应该修改程序以提高效率了
 #define		MAXFINISHLISTSIZE	9999	//!<记录完成队列的最大数值，这个值可以取1000以上的值
 #define		FINISHLISTHISTORY	_T("finishfilelist.txt")	//!<记录完成队列本地化的文件名
-#define		SERIALIZEDFILES		_T("serializefilenames.txt")//!< 记录上次由于等待队列中元素过多而未能存入队列，而写入本地文件的文件名数据
-#define		MAXSERIALIZESIZE	999		//!< 记录 存放着未能存入等待队列的数据 而缓存起来等待本地化或者写入等待队列的数据
+#define		SERIALIZEDFILES		_T("serializefilenames.txt")//!<记录上次由于等待队列中元素过多而未能存入队列，而写入本地文件的文件名数据
+#define		MAXSERIALIZESIZE	999		//!<记录存放着未能存入等待队列的数据 而缓存起来等待本地化或者写入等待队列的数据
 
 //负责维护一个将要转化的文件的队列。
 //把文件队列分为等待队列和已完成队列是为了避免出现重复转化的情况
@@ -73,6 +73,18 @@ private:
 	//rule:	当等待列表中变空时，尝试从本地序列化文件SERIALIZEDFILES中取出数据来放入等待队列
 	//		如果本地序列化文件中没有数据了，再从序列化队列中取出数据来放入等待队列
 	void fetchFilePath();
+	//Summary:
+	//		运行起php-cgi
+	void startPhpCgi();
+	//Summary:
+	//		向php-cgi传递参数, 
+	//param:
+	//		strFilePath	转换完成的文件路径
+	//		strRes	转换的结果，成功返回1，失败返回0
+	void sendData2Php(CString strFilePath, CString strRes);
+	//Summary:
+	//		向php-cgi收取数据
+	void recvDataFromPhp(CString& strData);
 
 private:
 	static FileMonList* s_Obj;
@@ -82,6 +94,8 @@ private:
 	size_t				m_SerializeListMaxSize;	//设置队列的上限，超过上限要存入本地
 	size_t				m_FinishListMaxSize;//设置完成队列中数据量的上限
 	CString				m_strFileExt;		//监视的文件的文件名后缀过滤
+	HANDLE				m_hStdoutR;			//输出数据到php
+	HANDLE				m_hStdoutW;			//输出数据到php
 	HANDLE				m_hAskForConvert;	//记录请求文件转换事件
 	CRITICAL_SECTION 	m_WaitListCS;		//操作添加文件路径的关键段
 	CRITICAL_SECTION 	m_finishListCS;		//操作完成转化的文件路径的关键段

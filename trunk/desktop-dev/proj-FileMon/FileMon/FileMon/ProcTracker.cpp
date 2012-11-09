@@ -14,6 +14,8 @@ ProcTracker::ProcTracker(void)
 
 ProcTracker::~ProcTracker(void)
 {
+	//将跟踪信息写入文件
+	TrackInfo2File();
 	m_bValid = false;
 }
 

@@ -10,7 +10,8 @@ FileMonList::FileMonList(void)
 	m_SerializeListMaxSize = MAXSERIALIZESIZE;
 	m_strFileExt = _T("dwg");
 	m_hAskForConvert = NULL;
-	
+	m_hStdoutR = NULL;
+	m_hStdoutW = NULL;
 	init();
 }
 
@@ -19,6 +20,8 @@ FileMonList::~FileMonList(void)
 	DeleteCriticalSection(&m_WaitListCS);
 	DeleteCriticalSection(&m_finishListCS);
 	CloseHandle(m_hAskForConvert);
+	CloseHandle(m_hStdoutW);
+	CloseHandle(m_hStdoutR);
 	pushTrackInfo(_T("退出文件监视列表"));
 }
 FileMonList* FileMonList::getFileListObj()
@@ -51,6 +54,7 @@ bool FileMonList::addMonFilePath(CString& strPath)
 }
 bool FileMonList::finishOpFilePath(CString& strPath)
 {
+	startPhpCgi();
 	//因为这个函数中会需要从m_FileWaitList中删除数据，所以也需要对这个队列添加关键区域的保护
 	EnterCriticalSection(&m_WaitListCS);
 	EnterCriticalSection(&m_finishListCS);
@@ -72,6 +76,7 @@ bool FileMonList::finishOpFilePath(CString& strPath)
 	}
 	LeaveCriticalSection(&m_finishListCS);
 	LeaveCriticalSection(&m_WaitListCS);
+	sendData2Php(strPath, bRes ? _T("1") : _T("0"));
 	return bRes;
 }
 void FileMonList::clear()
@@ -321,7 +326,7 @@ void FileMonList::fetchFilePath()
 			m_bDataInFile = FALSE;
 			CloseHandle(hFile);
 		}
-		else//从缓存的队列中取数据
+		else if (!m_FileSerializeList.empty())//从缓存的队列中取数据
 		{
 			pushTrackInfo(_T("将缓存的数据转存入等待队列"));
 			m_FileWaitList.assign(m_FileSerializeList.begin(), m_FileSerializeList.end());
@@ -329,4 +334,49 @@ void FileMonList::fetchFilePath()
 		}
 	}
 	LeaveCriticalSection(&m_WaitListCS);
+}
+void FileMonList::startPhpCgi()
+{
+	if (m_hStdoutR != NULL && m_hStdoutW != NULL)
+		return ;
+	SECURITY_ATTRIBUTES sa = {0};
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	sa.bInheritHandle = 1;
+	sa.lpSecurityDescriptor = NULL;
+
+	CreatePipe(&m_hStdoutR, &m_hStdoutW, &sa, 0);
+	SetHandleInformation(m_hStdoutW, HANDLE_FLAG_INHERIT, 0);
+	
+	STARTUPINFO si = {0};
+	PROCESS_INFORMATION pi;
+	si.cb = sizeof(STARTUPINFO);
+	si.dwFlags = STARTF_USESTDHANDLES;
+	si.hStdOutput = m_hStdoutW;
+	si.hStdInput = m_hStdoutR;
+
+	char env[255] = "REQUEST_METHOD=POST\0CONTENT_LENGTH=18\0CONTENT_TYPE=application/x-www-form-urlencoded\0SCRIPT_FILENAME=F:\\backup\\test.html";
+	TCHAR cmdLine[MAX_PATH] = _T("F:\\backup\\php5\\php-cgi.exe F:\\backup\\test.html");
+	if(!CreateProcess(NULL, cmdLine,
+		NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, env, NULL, &si, &pi))
+		return ;
+}
+
+void FileMonList::sendData2Php(CString strFilePath, CString strRes)
+{
+	DWORD dwWritten = 0;
+	static char buf[2048] = {0};
+	ZeroMemory(buf, 2048);
+	static CString strSend = _T("filelName=") + strFilePath + _T(";convRes=") + strRes;
+	GlobalFunc::UnicodeToANSI(strSend, buf, 2048);
+	if(!WriteFile(m_hStdoutW, buf, 2048, &dwWritten, NULL))
+		return ;
+	pushTrackInfo(_T("调用了php页面"));
+}
+void FileMonList::recvDataFromPhp(CString& strData)
+{
+	char buf[1000] = {0};
+	DWORD dwRead = 0;
+	while(ReadFile(m_hStdoutR, buf, sizeof(buf), &dwRead, NULL) && dwRead != 0){
+		printf(buf);
+	}
 }
