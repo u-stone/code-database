@@ -262,6 +262,14 @@
 			Name="component"
 			>
 			<File
+				RelativePath=".\Base64.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Base64.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ConvertManager.cpp"
 				>
 			</File>
