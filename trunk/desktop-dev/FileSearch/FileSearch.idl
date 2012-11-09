@@ -1,0 +1,10 @@
+// FileSearch.idl : FileSearch.dll 的类型库源
+// 此文件将由 MIDL 编译器处理以产生
+// 类型库(FileSearch.tlb)。
+
+[ uuid(FF19DF1A-58E4-4397-AD84-2E875133B8CE), version(1.0) ]
+library FileSearch
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+};
