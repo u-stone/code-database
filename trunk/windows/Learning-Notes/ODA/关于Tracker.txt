@@ -1,0 +1,14 @@
+
+
+基于OdEdInputTracker的继承体系，有几个函数：
+setValue();
+addDrawables();
+removeDrawables();
+这3个函数的调用顺序是在将tracker对象设置在取数据函数getPoint(),getDist()...中之后，调用顺序是：
+1. 首先是：addDrawables()，
+2. 特殊之类中的虚函数，比如说OdEdPointDefTracker中会调用basePoint()，
+3. 然后是setValue();
+4. 取数据函数执行结束之后，会执行removeDrawables();
+
+
+主意事项：
