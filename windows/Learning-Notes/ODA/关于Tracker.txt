@@ -11,4 +11,5 @@ removeDrawables();
 4. 取数据函数执行结束之后，会执行removeDrawables();
 
 
-主意事项：
+注意事项：
+如果想要在取数据函数执行过程中实现动态效果，那么需要在setValue()中设置OdGsModel对象被修改了：gsModel.onModified();
