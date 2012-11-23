@@ -1,0 +1,2 @@
+读取dwg数据的主程序一般会继承ExSystemServices和ExHostAppServices类。
+ExHostAppServices是继承自OdDbHostAppServices类的。在OdDbHostAppServices中有几个函数式在打开文件之后对dwg图纸环境做初始化用的。比如说在dwg图纸中有某一个字体的名字，然后寻找合适的字体的路径（调用findFile()），还有寻找字体映射文件（getFontMapFileName()），
