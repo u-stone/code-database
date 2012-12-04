@@ -25,6 +25,8 @@ public:
 	void startManager();
 	//调度线程的主程序
 	static DWORD WINAPI ManagerThread(LPVOID param);
+	//将转化结束结果传给服务器，传输的内容是转化的文件名和转换结果
+	static void PostResult(CString& strFileName, bool bSuc);
 private:
 	void static pushTrackInfo(LPCTSTR info);
 private:

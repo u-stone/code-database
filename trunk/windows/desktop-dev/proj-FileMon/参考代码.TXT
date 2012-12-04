@@ -1,0 +1,63 @@
+该函数将会发送post数据到指定的服务器的页面处理，并返回结果
+void hanshu()
+{
+	CInternetSession session("My Session");
+	CHttpConnection* pServer = NULL;
+	CHttpFile* pFile = NULL;
+	//CHttpFile *cn;
+	CString ServerName = _T("192.168.1.1");
+	INTERNET_PORT nPort = 80;
+	DWORD retcode;
+	CString xmlContent = "<Article><Id>1</Id><Sort>默认</Sort><Title>selectSingleNode</Title><Date>2005-11-18</Date><Content>queryString> [in]</Content><ReleaseTag>√</ReleaseTag></Article>";
+	CString strFormData = _T("username=test&password=123456&content=");
+	char szServerMsg[10240];//http服务器返回的数据临时缓存区
+	DWORD dwFileSize = 0;
+
+	strFormData += xmlContent;
+
+	CString strHeaders = _T("Content-Type: application/x-www-form-urlencoded");
+	try    
+	{
+		pServer = session.GetHttpConnection(ServerName, nPort);
+		pFile = pServer->OpenRequest(CHttpConnection::HTTP_VERB_POST, "/index.asp", NULL, 1, NULL, NULL, INTERNET_FLAG_EXISTING_CONNECT);
+
+		pFile->SendRequest(strHeaders, (LPVOID)(LPCTSTR)strFormData, strFormData.GetLength());      //这是登陆的，返回成功，
+
+		pFile->QueryInfoStatusCode(retcode);
+
+		//读取用户登录页面返回的信息
+		UINT nSize = pFile->Read(szServerMsg, 1024);
+		while (nSize > 0)
+		{
+			dwFileSize += nSize;
+			nSize = pFile->Read(szServerMsg + nSize, 1024);
+		}
+		szServerMsg[dwFileSize] = '\0';//插入结束标志
+		::AfxMessageBox(szServerMsg);
+	}           
+	catch (CInternetException * e)
+	{
+	}
+	pFile->Close();
+	pServer->Close();
+	delete pFile;    
+	delete pServer;
+
+	/////////////////////把返回的数据写入xml文件
+
+	CoInitialize(NULL);//初始化com组件
+
+	IXMLDOMDocumentPtr  theXML;
+	HRESULT hr;
+
+	hr = theXML.CreateInstance(__uuidof(DOMDocument));
+	if(!SUCCEEDED(hr))
+	{                            
+		::AfxMessageBox("无法创建DOMDocument对象，请检查是否安装了MS  XML  Parser  运行库!");
+		return;
+	}
+
+	theXML->loadXML(szServerMsg);
+	theXML->save("receive.xml");
+	::AfxMessageBox("保存成功");
+}
