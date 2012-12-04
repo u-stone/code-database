@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "ConvertManager.h"
 #include "FileMonList.h"
+#include <afxinet.h>
 
 ConvertManager* ConvertManager::s_ConvertManager = NULL;
 HANDLE ConvertManager::s_hAskForConvert = NULL;
@@ -162,12 +163,13 @@ DWORD WINAPI ConvertManager::ManagerThread(LPVOID param)
 
 			//等待转换完毕事件
 			WaitForSingleObject(s_hFinishConvert, INFINITE);//TODO：这个可能要根据实际需要设置一定的转换事件
-			ResetEvent(s_hFinishConvert);//将转换完毕事件设置复原
+			ResetEvent(s_hFinishConvert);//还原转换完毕事件
 			FlushFileBuffers(s_hPipe);//清空数据
 			//设置文件列表中数据表示已经转化完毕
 			FileMonList::getFileListObj()->finishOpFilePath(str);
 
 			pushTrackInfo(_T("此次转换结束"));
+			PostResult(str, true);
 			//取得下一个待转换文件路径
 			bHasFile = FileMonList::getFileListObj()->getNextFileObj(str);
 		}
@@ -176,6 +178,26 @@ DWORD WINAPI ConvertManager::ManagerThread(LPVOID param)
 	DisconnectNamedPipe(s_hPipe);
 	CloseHandle(s_hPipe);
 	return 0;
+}
+//Summary
+//  传输转换结果
+void ConvertManager::PostResult(CString& strFileName, bool bSuc)
+{
+	static CInternetSession sess;//建立会话 
+	static CString strUrl = _T("");
+	static CString strServer = _T("localhost");
+	static CString strHandlePage = _T("/testpost.php");
+	CHttpConnection* pServer = sess.GetHttpConnection(strServer);
+	CHttpFile *pFile = pServer->OpenRequest(CHttpConnection::HTTP_VERB_POST, strHandlePage, NULL, 1, NULL, NULL);
+
+	CString strHeaders = _T("Content-Type: application/x-www-form-urlencoded"); 
+	CString strData;
+	strData.Format(_T("FilePath=%s&Result=%s"), strFileName, bSuc ? _T("1") : _T("0"));
+	BOOL bRes = pFile->SendRequest(strHeaders, (LPVOID)(LPCTSTR)strData, strData.GetLength());
+	if (bRes)
+		pushTrackInfo(_T("添加操作结果成功 : ") + strFileName);
+	else
+		pushTrackInfo(_T("返回操作结果失败 : ") + strFileName);
 }
 //Summary:
 //	添加跟踪信息，为了调试使用
