@@ -30,18 +30,26 @@ private:
 	CString m_strFtpPassword;
 	FtpConnecter m_FtpConnecter;
 	CRect m_ClientRect;
+	CRect m_OldClientRect;
 private:
 	void ReadInit();
 	void WriteInit();
+	void PreExit();
 // 实现
 protected:
 	HICON m_hIcon;
+	NOTIFYICONDATA m_traydata;
+	CMenu m_menu;
 
 	// 生成的消息映射函数
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
+	afx_msg LRESULT OnTrayMessage(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpdateRemoteFolderPath(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnShowMainUi();
+	afx_msg void OnExitApp();
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedBtnmonitoring();
@@ -54,4 +62,6 @@ public:
 	afx_msg void OnBnClickedBtnexeconvertproc();
 	afx_msg void OnBnClickedBtntryconnect();
 	afx_msg void OnBnClickedChkshowpw();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnDestroy();
 };
