@@ -12,3 +12,4 @@
 #define FILEMONLIST			/*return*/
 #define WINFILEMON			/*return*/
 #define CONVERTMANAGER		/*return*/
+#define POSTMSG2PHP			/*return*/

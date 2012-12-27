@@ -1,9 +1,10 @@
 #include "StdAfx.h"
 #include "FtpConnecter.h"
+#include "PostMsg2Php.h"
 
 std::vector<CString> FtpConnecter::s_FileFailedUpload;
-CString FtpConnecter::s_strLocalRootPath = _T("D:\\home\\xampp\\htdocs\\filestores");
-CString FtpConnecter::s_strRemoteRootPath = _T("/xietong");
+CString FtpConnecter::s_strLocalRootPath = _T("D:\\home\\xampp\\htdocs\\disk\\filestores");
+CString FtpConnecter::s_strRemoteRootPath = _T("/xietong/filestores");
 BOOL FtpConnecter::s_bRetryUpload = TRUE;		//默认要重试上传一次上次上传失败的文件
 BOOL FtpConnecter::s_bHasUploadFailedFile = FALSE;	
 BOOL FtpConnecter::s_bStopTask = FALSE;
@@ -39,8 +40,11 @@ DWORD WINAPI FtpConnecter::UploadeFile(LPVOID param)
 		{
 			if (s_bStopTask)//如果要停止任务那么就跳出
 				break;
+			pushTrackInfo(L"等待下一次上传任务");
 			if (WaitForSingleObject(pFtpInfo->_hWaitableTimer, INFINITE) != WAIT_OBJECT_0)
 				break;
+			pushTrackInfo(L"开始上传任务");
+			PostMessage(AfxGetApp()->m_pMainWnd->GetSafeHwnd(), 1024, 0, 0);
 			strCount.Format(_T("开始第%d次上传任务"), ++count);
 			pushTrackInfo(strCount);
 			if (s_bStopTask)//如果要停止任务那么就跳出
@@ -84,11 +88,14 @@ DWORD WINAPI FtpConnecter::UploadeFile(LPVOID param)
 			if (!getAllFilesUpload(files))
 				s_bThreadRunning = FALSE;
 
+			PostMsg2Php post2php;
 			BOOL bPut;
+			CString strFilePath;
 			for (std::vector<CString>::iterator iter = files.begin(); iter != files.end(); ++iter)
 			{
-				pushTrackInfo(_T("开始上传 ") + *iter);
-				bPut = pFtpconnection->PutFile(strLocalPath + _T("\\") + *iter, *iter);
+				strFilePath = strLocalPath + _T("\\") + *iter;
+				pushTrackInfo(_T("开始上传 ") + strFilePath);
+				bPut = pFtpconnection->PutFile(strFilePath, *iter);
 				if (!bPut)//如果上传不成功那么就记录下来
 				{
 					pushTrackInfo(*iter + _T(" 上传失败"));
@@ -96,7 +103,10 @@ DWORD WINAPI FtpConnecter::UploadeFile(LPVOID param)
 					s_bHasUploadFailedFile = TRUE;
 				}
 				else
+				{
 					pushTrackInfo(*iter + _T(" 上传成功"));
+					post2php.PostResult(strFilePath, PostMsg2Php::Upload, PostMsg2Php::Suc);
+				}
 			}
 			if (s_bRetryUpload && s_bHasUploadFailedFile)//如果要重试上传并且也有文件上传失败
 			{
@@ -106,9 +116,13 @@ DWORD WINAPI FtpConnecter::UploadeFile(LPVOID param)
 					static CString str;
 					str = _T("尝试再次上传文件 ") + strLocalPath + _T("\\") + *iter;
 					pushTrackInfo(str);
-					bPut = pFtpconnection->PutFile(strLocalPath + _T("\\") + *iter, *iter);
+					strFilePath = strLocalPath + _T("\\") + *iter;
+					bPut = pFtpconnection->PutFile(strFilePath, *iter);
 					if (!bPut)
+					{
+						post2php.PostResult(strFilePath, PostMsg2Php::Upload, PostMsg2Php::Failed);
 						s_bHasUploadFailedFile = TRUE;
+					}
 				}
 			}
 			if (pFtpconnection)
@@ -152,7 +166,7 @@ void FtpConnecter::setBeginTime(SYSTEMTIME& beginTimeSt)
 void FtpConnecter::setUploadTimePeriod(unsigned long lPeroid)
 {
 	m_lTimePeriod = lPeroid;
-	const long nTimeUnitPerSecond = 1000;//最小单位1ms，这里是1s
+	const long nTimeUnitPerSecond = 1000;//the unit is 1ms，这里是1s
 	m_lTimePeriod *= nTimeUnitPerSecond;
 }
 //设置好相关参数(上传文件的FTP信息，上传文件的时间设置)之后，开始执行设置的定时任务
@@ -216,7 +230,7 @@ void FtpConnecter::initTimeInfo()
 	st.wMonth = 5;
 	st.wDayOfWeek = 0;
 	st.wDay = 26;
-	st.wHour = 2;
+	st.wHour = 11;
 	st.wMinute = 0;
 	st.wSecond = 0;
 	st.wMilliseconds = 0;

@@ -88,39 +88,39 @@ BEGIN
     DEFPUSHBUTTON   "确定",IDOK,113,41,50,14,WS_GROUP
 END
 
-IDD_FILEMON_DIALOG DIALOGEX 0, 0, 543, 371
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_FILEMON_DIALOG DIALOGEX 0, 0, 482, 379
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "FileMon"
 FONT 9, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    PUSHBUTTON      "添加监视路径",IDC_BtnAddPath,383,19,72,14
-    LISTBOX         IDC_LISTPaths,382,36,153,57,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "删除选定的监视路径",IDC_BtnDelPath,464,19,72,14
-    PUSHBUTTON      "设置 转换图纸程序的路径：",IDC_BtnOpenConvertProc,383,104,97,14
-    EDITTEXT        IDC_EdtConvertProcFullPath,382,120,153,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EdtIP,439,168,96,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EdtFTPPort,439,184,96,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EdtUser,439,200,96,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EdtPassword,439,216,96,14,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "显示密码",IDC_ChkShowPw,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,496,232,39,10
-    PUSHBUTTON      "测试连接",IDC_BtnTryConnect,383,244,50,14
-    EDITTEXT        IDC_EdtRemotePath,382,279,153,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_EdtuploadFileTime,382,307,153,12,ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON      "启动监视",IDC_BtnMonitoring,383,335,70,14
-    PUSHBUTTON      "启动转换图纸程序",IDC_BtnExeConvertProc,464,335,70,14
-    DEFPUSHBUTTON   "退出",IDOK,489,350,47,14
-    LTEXT           "FTP服务器   IP：",IDC_STATIC,383,170,54,8
-    LTEXT           "FTP服务器 Port：",IDC_STATIC,383,186,56,8
-    LTEXT           "用户名：",IDC_STATIC,383,202,28,8
-    LTEXT           "密码：",IDC_STATIC,383,218,22,8
-    GROUPBOX        "监视及转换",IDC_STATIC,380,7,156,131
-    GROUPBOX        "FTP信息",IDC_STATIC,380,152,156,171
-    LTEXT           "当前FTP上的目标路径：",IDC_STATIC,383,267,75,8
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,380,144,156,1
-    LTEXT           "每天上传文件的时间：",IDC_STATIC,383,295,70,8
-    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,380,329,156,1
-    CTEXT           "",IDC_STATICFTPTHREADSTATUS,439,244,96,14,0,WS_EX_TRANSPARENT | WS_EX_STATICEDGE
+    PUSHBUTTON      "添加监视路径",IDC_BtnAddPath,9,19,72,14,WS_GROUP
+    LISTBOX         IDC_LISTPaths,8,36,153,57,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "删除选定的监视路径",IDC_BtnDelPath,91,19,72,14
+    PUSHBUTTON      "设置 转换图纸程序的路径：",IDC_BtnOpenConvertProc,9,104,97,14
+    EDITTEXT        IDC_EdtConvertProcFullPath,8,120,153,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EdtIP,65,168,96,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EdtFTPPort,65,184,96,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EdtUser,65,200,96,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EdtPassword,65,216,96,14,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "显示密码",IDC_ChkShowPw,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,122,232,39,10
+    PUSHBUTTON      "测试连接",IDC_BtnTryConnect,9,244,50,14,WS_GROUP
+    EDITTEXT        IDC_EdtRemotePath,8,279,153,12,ES_AUTOHSCROLL | ES_READONLY | WS_GROUP
+    EDITTEXT        IDC_EdtuploadFileTime,8,307,153,12,ES_AUTOHSCROLL | ES_READONLY | WS_GROUP
+    PUSHBUTTON      "启动监视",IDC_BtnMonitoring,9,335,70,14,WS_GROUP
+    PUSHBUTTON      "启动转换图纸程序",IDC_BtnExeConvertProc,90,335,70,14,WS_GROUP
+    DEFPUSHBUTTON   "关闭界面",IDOK,113,358,47,14,WS_GROUP
+    LTEXT           "FTP服务器   IP：",IDC_STATIC,9,170,54,8
+    LTEXT           "FTP服务器 Port：",IDC_STATIC,9,186,56,8
+    LTEXT           "用户名：",IDC_STATIC,9,202,28,8
+    LTEXT           "密码：",IDC_STATIC,9,218,22,8
+    GROUPBOX        "监视及转换",IDC_STATIC,7,7,156,131,WS_GROUP
+    GROUPBOX        "FTP信息",IDC_STATIC,7,152,156,171,WS_GROUP
+    LTEXT           "当前FTP上的目标路径：",IDC_STATIC,9,267,75,8
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN | WS_GROUP,7,144,156,1
+    LTEXT           "每天上传文件的时间：",IDC_STATIC,9,295,70,8
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN | WS_GROUP,7,329,156,1
+    CTEXT           "",IDC_STATICFTPTHREADSTATUS,65,244,96,14,0,WS_EX_TRANSPARENT | WS_EX_STATICEDGE
 END
 
 
@@ -146,13 +146,13 @@ BEGIN
     BEGIN
         BLOCK "080403a8"
         BEGIN
-            VALUE "CompanyName", "TODO: <公司名>"
-            VALUE "FileDescription", "TODO: <文件说明>"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "CompanyName", "AEC"
+            VALUE "FileDescription", "管理用户上传dwg文件到wmf的转化"
+            VALUE "FileVersion", "V 1.0"
             VALUE "InternalName", "FileMon.exe"
-            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "LegalCopyright", "AEC"
             VALUE "OriginalFilename", "FileMon.exe"
-            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductName", "文件监视和转化程序"
             VALUE "ProductVersion", "1.0.0.1"
         END
     END
@@ -182,12 +182,27 @@ BEGIN
     IDD_FILEMON_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 536
+        RIGHTMARGIN, 475
         TOPMARGIN, 7
-        BOTTOMMARGIN, 364
+        BOTTOMMARGIN, 372
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_RBMENU MENU 
+BEGIN
+    POPUP "托盘菜单"
+    BEGIN
+        MENUITEM "显示主界面",                       ID_SHOWMAINUI
+        MENUITEM "退出程序",                        ID_EXITAPP
+    END
+END
 
 
 /////////////////////////////////////////////////////////////////////////////

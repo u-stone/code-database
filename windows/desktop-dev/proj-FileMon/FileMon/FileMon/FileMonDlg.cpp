@@ -77,6 +77,11 @@ BEGIN_MESSAGE_MAP(CFileMonDlg, CDialog)
 	ON_BN_CLICKED(IDC_BtnExeConvertProc, &CFileMonDlg::OnBnClickedBtnexeconvertproc)
 	ON_BN_CLICKED(IDC_BtnTryConnect, &CFileMonDlg::OnBnClickedBtntryconnect)
 	ON_BN_CLICKED(IDC_ChkShowPw, &CFileMonDlg::OnBnClickedChkshowpw)
+	ON_COMMAND(ID_SHOWMAINUI, OnShowMainUi)
+	ON_COMMAND(ID_EXITAPP, OnExitApp)
+	ON_MESSAGE(WM_TRARMESSAGE,OnTrayMessage)
+	ON_MESSAGE(1024,OnUpdateRemoteFolderPath)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -85,6 +90,7 @@ END_MESSAGE_MAP()
 BOOL CFileMonDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+	m_menu.LoadMenu(IDR_RBMENU);
 
 	// 将“关于...”菜单项添加到系统菜单中。
 
@@ -106,6 +112,7 @@ BOOL CFileMonDlg::OnInitDialog()
 		}
 	}
 
+	//ShowWindow(SW_MAXIMIZE);
 	// 设置此对话框的图标。当应用程序主窗口不是对话框时，框架将自动
 	//  执行此操作
 	SetIcon(m_hIcon, TRUE);			// 设置大图标
@@ -116,7 +123,17 @@ BOOL CFileMonDlg::OnInitDialog()
 	SetTimer(2, 5000, NULL);//每5s更新一次线程的状态
 	ReadInit();
 	GetClientRect(&m_ClientRect);
-	m_ClientRect.right = LONG(m_ClientRect.Width() * 0.69);
+	m_ClientRect.left = LONG(m_ClientRect.Width() * 0.31);
+
+
+	m_traydata.cbSize = sizeof(NOTIFYICONDATA);
+	m_traydata.hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_traydata.hWnd = m_hWnd;
+	wchar_t  *m_str = _T("PT主界面");
+	wcscpy_s(m_traydata.szTip, 64, m_str);
+	m_traydata.uCallbackMessage = WM_TRARMESSAGE;
+	m_traydata.uFlags = NIF_ICON|NIF_MESSAGE|NIF_TIP;
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -126,6 +143,11 @@ void CFileMonDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	{
 		CAboutDlg dlgAbout;
 		dlgAbout.DoModal();
+	}
+	else if ((nID & 0xFFF0) == SC_MINIMIZE )
+	{
+		ShowWindow(SW_HIDE);
+		Shell_NotifyIcon(NIM_ADD,&m_traydata);
 	}
 	else
 	{
@@ -167,7 +189,7 @@ void CFileMonDlg::OnPaint()
 		std::list<CString> trackInfoList;
 		ProcTracker::getTracker()->getTrackerInfo(trackInfoList);
 		for (std::list<CString>::reverse_iterator iter = trackInfoList.rbegin(); iter != trackInfoList.rend(); ++iter, ++i)
-			dc.TextOut(10, 200 + i * 12, *iter);
+			dc.TextOut(300, 200 + i * 12, *iter);
 		dc.SelectObject(pOldFont);
 		font.DeleteObject();
 		CDialog::OnPaint();
@@ -349,8 +371,10 @@ void CFileMonDlg::WriteInit()
 }
 void CFileMonDlg::OnBnClickedOk()
 {
-	WriteInit();
-	OnOK();
+	ShowWindow(SW_HIDE);
+	Shell_NotifyIcon(NIM_ADD,&m_traydata);
+	//WriteInit();
+	//OnOK();
 }
 
 void CFileMonDlg::OnBnClickedBtnopenconvertproc()
@@ -383,6 +407,7 @@ void CFileMonDlg::OnBnClickedBtnexeconvertproc()
 {
 	GetDlgItem(IDC_EdtConvertProcFullPath)->GetWindowText(m_ConvertProcPath);
 	CString param = _T("/s /k \"") + m_ConvertProcPath + _T("\"");
+	AfxMessageBox(param);
 	ShellExecute(NULL, L"open", _T("cmd.exe"), param, NULL, SW_SHOWNORMAL);
 	//ShellExecute(NULL, L"open", m_ConvertProcPath, NULL, NULL, SW_SHOWNORMAL);
 }
@@ -418,4 +443,59 @@ void CFileMonDlg::OnBnClickedChkshowpw()
 		((CEdit*)GetDlgItem(IDC_EdtPassword))->SetPasswordChar(_T('*'));
 	
 	GetDlgItem(IDC_EdtPassword)->SetWindowText(m_strFtpPassword);
+}
+
+BOOL CFileMonDlg::PreTranslateMessage(MSG* pMsg)
+{
+	// TODO: 在此添加专用代码和/或调用基类
+
+	if (pMsg->message == WM_KEYDOWN)
+	{
+		if (pMsg->wParam == VK_ESCAPE || pMsg->wParam == VK_F1)
+			return TRUE;
+	}
+	return CDialog::PreTranslateMessage(pMsg);
+}
+
+LRESULT CFileMonDlg::OnTrayMessage(WPARAM wParam, LPARAM lParam)
+{
+	if (lParam == WM_LBUTTONDOWN)
+	{
+		ShowWindow(SW_RESTORE);
+	}
+	else if (lParam == WM_RBUTTONDOWN)
+	{
+		CPoint m_point;
+		::GetCursorPos(&m_point);
+		CMenu* m_submenu = m_menu.GetSubMenu(0);
+		m_submenu->TrackPopupMenu(TPM_LEFTALIGN|TPM_RIGHTBUTTON, m_point.x,m_point.y,AfxGetApp()->m_pMainWnd,TPM_LEFTALIGN);
+	}
+	return 0;
+}
+LRESULT CFileMonDlg::OnUpdateRemoteFolderPath(WPARAM wParam, LPARAM lParam)
+{
+	GetDlgItem(IDC_EdtRemotePath)->SetWindowText(m_FtpConnecter.getCurRemoteFolderPath());
+	return 0;
+}
+
+void CFileMonDlg::PreExit()
+{
+	Shell_NotifyIcon(NIM_DELETE,&m_traydata);
+}
+void CFileMonDlg::OnDestroy()
+{	
+	CDialog::OnDestroy();
+
+	PreExit();
+	WriteInit();
+	OnOK();
+}
+void CFileMonDlg::OnShowMainUi()
+{
+	ShowWindow(SW_RESTORE);
+}
+void CFileMonDlg::OnExitApp()
+{
+	PreExit();
+	CDialog::OnOK();
 }

@@ -2,6 +2,7 @@
 #include "ConvertManager.h"
 #include "FileMonList.h"
 #include <afxinet.h>
+#include "PostMsg2Php.h"
 
 ConvertManager* ConvertManager::s_ConvertManager = NULL;
 HANDLE ConvertManager::s_hAskForConvert = NULL;
@@ -124,6 +125,7 @@ DWORD WINAPI ConvertManager::ManagerThread(LPVOID param)
 			return -1;
 		}
 	}
+	PostMsg2Php pm2php;
 	TCHAR buf[BUFSIZE] = {0};
 	DWORD dwWrittenByte = 0, dwRealBufSize = 0;
 	while (1)
@@ -169,7 +171,9 @@ DWORD WINAPI ConvertManager::ManagerThread(LPVOID param)
 			FileMonList::getFileListObj()->finishOpFilePath(str);
 
 			pushTrackInfo(_T("此次转换结束"));
-			PostResult(str, true);
+			PostMsg2Php::PostDataRes res = pm2php.PostResult(str, PostMsg2Php::Convert, PostMsg2Php::Suc);// 在 Windows服务器上转化成功
+			if (res == PostMsg2Php::PostDataFailed)//如果失败那么在尝试传一次
+				pm2php.PostResult(str, PostMsg2Php::Convert, PostMsg2Php::Suc);
 			//取得下一个待转换文件路径
 			bHasFile = FileMonList::getFileListObj()->getNextFileObj(str);
 		}
@@ -178,26 +182,6 @@ DWORD WINAPI ConvertManager::ManagerThread(LPVOID param)
 	DisconnectNamedPipe(s_hPipe);
 	CloseHandle(s_hPipe);
 	return 0;
-}
-//Summary
-//  传输转换结果
-void ConvertManager::PostResult(CString& strFileName, bool bSuc)
-{
-	static CInternetSession sess;//建立会话 
-	static CString strUrl = _T("");
-	static CString strServer = _T("localhost");
-	static CString strHandlePage = _T("/testpost.php");
-	CHttpConnection* pServer = sess.GetHttpConnection(strServer);
-	CHttpFile *pFile = pServer->OpenRequest(CHttpConnection::HTTP_VERB_POST, strHandlePage, NULL, 1, NULL, NULL);
-
-	CString strHeaders = _T("Content-Type: application/x-www-form-urlencoded"); 
-	CString strData;
-	strData.Format(_T("FilePath=%s&Result=%s"), strFileName, bSuc ? _T("1") : _T("0"));
-	BOOL bRes = pFile->SendRequest(strHeaders, (LPVOID)(LPCTSTR)strData, strData.GetLength());
-	if (bRes)
-		pushTrackInfo(_T("添加操作结果成功 : ") + strFileName);
-	else
-		pushTrackInfo(_T("返回操作结果失败 : ") + strFileName);
 }
 //Summary:
 //	添加跟踪信息，为了调试使用

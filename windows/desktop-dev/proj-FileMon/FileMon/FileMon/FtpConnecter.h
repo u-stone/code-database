@@ -12,11 +12,12 @@ using namespace std;
 struct FtpInfo 
 {
 	FtpInfo(){
-		_hWaitableTimer = NULL;
+		_hWaitableTimer = INVALID_HANDLE_VALUE;
 		_nFtpServerPort = 21;//FTPÄ¬ÈÏ¶Ë¿Ú
 		_strFtpServerIp = _T("");
 		_strUserName = _T("");
 		_strUserPw = _T("");
+		_strFolderPath = _T("");
 	}
 	HANDLE	_hWaitableTimer;
 	int		_nFtpServerPort;
