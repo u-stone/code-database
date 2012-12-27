@@ -80,7 +80,8 @@ BEGIN_MESSAGE_MAP(CFileMonDlg, CDialog)
 	ON_COMMAND(ID_SHOWMAINUI, OnShowMainUi)
 	ON_COMMAND(ID_EXITAPP, OnExitApp)
 	ON_MESSAGE(WM_TRARMESSAGE,OnTrayMessage)
-	ON_MESSAGE(1024,OnUpdateRemoteFolderPath)
+	ON_MESSAGE(WM_UpdateRemoteFolderPath,OnUpdateRemoteFolderPath)
+	ON_MESSAGE(WM_UpdateLocalFolderPath,OnUpdateLocalFolderPath)
 	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
@@ -475,6 +476,11 @@ LRESULT CFileMonDlg::OnTrayMessage(WPARAM wParam, LPARAM lParam)
 LRESULT CFileMonDlg::OnUpdateRemoteFolderPath(WPARAM wParam, LPARAM lParam)
 {
 	GetDlgItem(IDC_EdtRemotePath)->SetWindowText(m_FtpConnecter.getCurRemoteFolderPath());
+	return 0;
+}
+LRESULT CFileMonDlg::OnUpdateLocalFolderPath(WPARAM wParam, LPARAM lParam)
+{
+	GetDlgItem(IDC_EdtLocalFolderPath)->SetWindowText(m_FtpConnecter.getCurLocalFolderPath());
 	return 0;
 }
 

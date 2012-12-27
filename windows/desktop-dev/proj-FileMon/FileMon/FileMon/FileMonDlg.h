@@ -48,6 +48,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg LRESULT OnTrayMessage(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUpdateRemoteFolderPath(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpdateLocalFolderPath(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnShowMainUi();
 	afx_msg void OnExitApp();
 	DECLARE_MESSAGE_MAP()
