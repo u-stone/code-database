@@ -8,6 +8,9 @@
 #define BUFSIZE				512
 #define W2FBUFSIZE			1024
 
+#define WM_UpdateRemoteFolderPath	WM_USER + 1024
+#define WM_UpdateLocalFolderPath	WM_USER + 1025
+
 //使用这个可以屏蔽部分类的消息
 #define FILEMONLIST			/*return*/
 #define WINFILEMON			/*return*/

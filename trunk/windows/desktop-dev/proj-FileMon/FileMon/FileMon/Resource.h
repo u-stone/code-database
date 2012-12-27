@@ -28,6 +28,8 @@
 #define IDC_ChkShowPw                   1017
 #define IDC_STATICFTPTHREADSTATUS       1018
 #define WM_TRARMESSAGE                  1019
+#define IDC_EDIT1                       1020
+#define IDC_EdtLocalFolderPath          1020
 #define ID_SHOWMAINUI                   32773
 #define ID_EXITAPP                      32774
 
@@ -37,7 +39,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1020
+#define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
