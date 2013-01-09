@@ -5,7 +5,7 @@
 #pragma once
 #define PICNUM			11
 #define DIGITALNUM		10
-#define PICNUMOFRING	90	//定义每次循环读取的图片个数
+#define PICNUMOFRING	20	//定义每次循环读取的图片个数
 
 #define TIMER1			100	//定义定时器1间隔时间
 #define TIMER2			100	//定义定时器2间隔时间
