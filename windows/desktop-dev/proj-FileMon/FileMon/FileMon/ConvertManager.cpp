@@ -171,7 +171,21 @@ DWORD WINAPI ConvertManager::ManagerThread(LPVOID param)
 			FileMonList::getFileListObj()->finishOpFilePath(str);
 
 			pushTrackInfo(_T("此次转换结束"));
-			PostMsg2Php::PostDataRes res = pm2php.PostResult(str, PostMsg2Php::Convert, PostMsg2Php::Suc);// 在 Windows服务器上转化成功
+			//获取此次转换结果
+			BOOL bSuc = FALSE;
+			DWORD dwRead = 0;
+			ZeroMemory(buf, BUFSIZE*sizeof(TCHAR));
+			do 
+			{
+				bSuc = ReadFile(s_hPipe, buf, BUFSIZ*sizeof(TCHAR), &dwRead, NULL);
+				if (!bSuc && GetLastError() != ERROR_MORE_DATA)
+					break;
+			} while (!bSuc);
+			CString strRes(buf);
+			PostMsg2Php::ActionRes ConvertRes = PostMsg2Php::Failed;
+			if (strRes.CompareNoCase(L"1") == 0)//得到数据为“1”表示成功，得到“0”表示失败
+				ConvertRes = PostMsg2Php::Suc;
+			PostMsg2Php::PostDataRes res = pm2php.PostResult(str, PostMsg2Php::Convert, ConvertRes);// 在 Windows服务器上转化成功
 			if (res == PostMsg2Php::PostDataFailed)//如果失败那么在尝试传一次
 				pm2php.PostResult(str, PostMsg2Php::Convert, PostMsg2Php::Suc);
 			//取得下一个待转换文件路径

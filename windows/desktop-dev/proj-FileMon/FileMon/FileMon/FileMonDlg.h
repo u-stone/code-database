@@ -31,6 +31,7 @@ private:
 	FtpConnecter m_FtpConnecter;
 	CRect m_ClientRect;
 	CRect m_OldClientRect;
+	bool	m_bShowConsole;
 private:
 	void ReadInit();
 	void WriteInit();
@@ -65,4 +66,7 @@ public:
 	afx_msg void OnBnClickedChkshowpw();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg void OnDestroy();
+	afx_msg void OnBnClickedBtnflushlog();
+	afx_msg void OnBnClickedBtnswitchconsole();
+	afx_msg void OnClose();
 };

@@ -83,6 +83,9 @@ BEGIN_MESSAGE_MAP(CFileMonDlg, CDialog)
 	ON_MESSAGE(WM_UpdateRemoteFolderPath,OnUpdateRemoteFolderPath)
 	ON_MESSAGE(WM_UpdateLocalFolderPath,OnUpdateLocalFolderPath)
 	ON_WM_DESTROY()
+	ON_BN_CLICKED(IDC_BtnFlushLog, &CFileMonDlg::OnBnClickedBtnflushlog)
+	ON_BN_CLICKED(IDC_BtnSwitchConsole, &CFileMonDlg::OnBnClickedBtnswitchconsole)
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -125,6 +128,8 @@ BOOL CFileMonDlg::OnInitDialog()
 	ReadInit();
 	GetClientRect(&m_ClientRect);
 	m_ClientRect.left = LONG(m_ClientRect.Width() * 0.31);
+
+	m_bShowConsole = true;
 
 
 	m_traydata.cbSize = sizeof(NOTIFYICONDATA);
@@ -190,7 +195,7 @@ void CFileMonDlg::OnPaint()
 		std::list<CString> trackInfoList;
 		ProcTracker::getTracker()->getTrackerInfo(trackInfoList);
 		for (std::list<CString>::reverse_iterator iter = trackInfoList.rbegin(); iter != trackInfoList.rend(); ++iter, ++i)
-			dc.TextOut(300, 200 + i * 12, *iter);
+			dc.TextOut(300, 50 + i * 12, *iter);
 		dc.SelectObject(pOldFont);
 		font.DeleteObject();
 		CDialog::OnPaint();
@@ -407,10 +412,11 @@ void CFileMonDlg::OnBnClickedBtnopenconvertproc()
 void CFileMonDlg::OnBnClickedBtnexeconvertproc()
 {
 	GetDlgItem(IDC_EdtConvertProcFullPath)->GetWindowText(m_ConvertProcPath);
-	CString param = _T("/s /k \"") + m_ConvertProcPath + _T("\"");
+	CString param = _T("/s /k \"") + m_ConvertProcPath + _T("\"");// + _T(" > ") + ProcTracker::getTracker()->getLogFilePath();
 	AfxMessageBox(param);
 	ShellExecute(NULL, L"open", _T("cmd.exe"), param, NULL, SW_SHOWNORMAL);
 	//ShellExecute(NULL, L"open", m_ConvertProcPath, NULL, NULL, SW_SHOWNORMAL);
+	m_bShowConsole = true;
 }
 
 void CFileMonDlg::OnBnClickedBtntryconnect()
@@ -427,8 +433,9 @@ void CFileMonDlg::OnBnClickedBtntryconnect()
 	if (m_FtpConnecter.tryConnectFtp())
 	{
 		AfxMessageBox(_T("连接成功"));
-		GetDlgItem(IDC_EdtRemotePath)->SetWindowText(m_FtpConnecter.getCurRemoteFolderPath());
-		GetDlgItem(IDC_EdtuploadFileTime)->SetWindowText(m_FtpConnecter.getUploadBeginTime());
+		//GetDlgItem(IDC_EdtRemotePath)->SetWindowText(m_FtpConnecter.getCurRemoteFolderPath());
+		//GetDlgItem(IDC_EdtLocalFolderPath)->SetWindowText(m_FtpConnecter.getCurLocalFolderPath());
+		//GetDlgItem(IDC_EdtuploadFileTime)->SetWindowText(m_FtpConnecter.getUploadBeginTime());
 		m_FtpConnecter.startUploadTask();
 	}
 	else
@@ -504,4 +511,34 @@ void CFileMonDlg::OnExitApp()
 {
 	PreExit();
 	CDialog::OnOK();
+}
+
+void CFileMonDlg::OnBnClickedBtnflushlog()
+{
+	//强制将日志写入文件
+	ProcTracker::getTracker()->ForceInfo2File();
+}
+
+void CFileMonDlg::OnBnClickedBtnswitchconsole()
+{
+	//显示/隐藏控制台程序
+	m_bShowConsole = !m_bShowConsole;
+	//CString str = L"C:\\Windows\\System32\\cmd.exe - ";
+	//str += m_ConvertProcPath;
+	//CWnd* pwnd = FindWindow(L"", str);
+	//if (pwnd == NULL)
+	//	return ;
+	//if (m_bShowConsole)
+	//	::ShowWindow(pwnd->GetSafeHwnd(), SW_SHOW);
+	//else
+	//	::ShowWindow(pwnd->GetSafeHwnd(), SW_HIDE);
+}
+
+void CFileMonDlg::OnClose()
+{
+	int res = MessageBox(L"是否要退出程序", L"退出程序", MB_YESNO);
+	if (res != 6)
+		return ;
+
+	CDialog::OnClose();
 }

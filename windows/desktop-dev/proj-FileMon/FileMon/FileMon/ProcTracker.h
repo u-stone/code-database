@@ -31,6 +31,11 @@ public:
 	void setUpperLimit(int nLimit);
 	//判断对象是否有效
 	bool isValid();
+	//设置强制将数据写入文件
+	void ForceInfo2File();
+	//得到日志文件路径
+	CString getLogFilePath();
+
 private:
 	//跟踪信息超过上限，写入本地文件
 	void TrackInfo2File();
@@ -39,6 +44,7 @@ private:
 	CRITICAL_SECTION m_TrackInfoListCS;
 	std::list<CString> m_TrackInfoList;	//!<记录跟踪信息，但是这里只维护一定数量的信息
 	bool	m_bUpdate;					//!<记录是否有新的更新信息
+	bool	m_bForceInfo2File;			//!<强制将日志写入文件
 	bool	m_bValid;					//!<记录是否有效
 	size_t	m_InfoUpperLimit;			//!<记录上限数值
 };
