@@ -9,6 +9,7 @@ ProcTracker::ProcTracker(void)
 	m_bUpdate = false;
 	m_bValid = true;
 	m_InfoUpperLimit = 100;
+	m_bForceInfo2File = false;
 	InitializeCriticalSection(&m_TrackInfoListCS);
 }
 
@@ -56,10 +57,11 @@ void ProcTracker::pushTrackInfo(CString& strTrack)
 		m_TrackInfoList.pop_front();
 	static int count = 0;
 	count++;
-	if (count > MAX_TRACKINFO)
+	if (count > MAX_TRACKINFO || m_bForceInfo2File)
 	{
 		count = 0;//重新计算
 		TrackInfo2File();
+		m_bForceInfo2File = false;
 	}
 	static SYSTEMTIME st;
 	GetLocalTime(&st);
@@ -86,9 +88,24 @@ bool ProcTracker::isValid()
 {
 	return m_bValid;
 }
+void ProcTracker::ForceInfo2File()
+{
+	CString str = L"=============================Section====================================";
+	m_bForceInfo2File = true;
+	pushTrackInfo(str);
+}
+CString ProcTracker::getLogFilePath()
+{
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	CString strPath;
+	strPath.Format(_T("%04d-%02d-%02d %02d.%02d"), st.wYear, st.wMonth, st.wDay, st.wHour, 0/*st.wMinute*/);
+	strPath = GlobalFunc::getCurrentPath() + _T("Log\\") + strPath + _T(".txt");
+	return strPath;
+}
 void ProcTracker::TrackInfo2File()
 {
-	if (m_TrackInfoList.size() < MAX_TRACKINFO)
+	if (m_TrackInfoList.size() < MAX_TRACKINFO && !m_bForceInfo2File)
 		return ;
 	//如果完成队列中的数据量超过指定的数量，那么就将数据写入到本地文件中
 	SECURITY_ATTRIBUTES sa;
@@ -101,10 +118,7 @@ void ProcTracker::TrackInfo2File()
 	if (!GlobalFunc::DirectoryExist(strPath))
 		GlobalFunc::CreateDirectory(strPath);
 	//设定日志的名称为时间，最大为一个小时一个文件
-	SYSTEMTIME st;
-	GetLocalTime(&st);
-	strPath.Format(_T("%04d%02d%02d%02d%02d"), st.wYear, st.wMonth, st.wDay, st.wHour, 0/*st.wMinute*/);
-	strPath = GlobalFunc::getCurrentPath() + _T("Log\\") + strPath + _T(".txt");
+	strPath = getLogFilePath();
 	HANDLE hFile = CreateFile(strPath, FILE_APPEND_DATA, 0, &sa, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{

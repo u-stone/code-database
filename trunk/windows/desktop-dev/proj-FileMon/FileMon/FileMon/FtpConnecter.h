@@ -76,6 +76,8 @@ private:
 	static void getPreviousDate(CString& strYear, CString& strMonth, CString& strDay, CString& strHour, CString& strMinutes);
 	//得到现在的时间
 	static void getCurrentDate(CString& strYear, CString& strMonth, CString& strDay, CString& strHour, CString& strMinutes);
+	//得到现在是否应该上传
+	static bool doUpload();
 private:
 	static BOOL	s_bRetryUpload;			//!< 记录是否尝试再次上传上次上传失败的文件，不过这里只重试一次
 	static BOOL	s_bHasUploadFailedFile;	//!< 记录是否有上传失败的文件

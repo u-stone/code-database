@@ -44,7 +44,9 @@ DWORD WINAPI FtpConnecter::UploadeFile(LPVOID param)
 			if (WaitForSingleObject(pFtpInfo->_hWaitableTimer, INFINITE) != WAIT_OBJECT_0)
 				break;
 			pushTrackInfo(L"开始上传任务");
-			PostMessage(AfxGetApp()->m_pMainWnd->GetSafeHwnd(), 1024, 0, 0);
+			//更新本次上传的本地和远程文件夹的信息
+			PostMessage(AfxGetApp()->m_pMainWnd->GetSafeHwnd(), WM_UpdateRemoteFolderPath, 0, 0);
+			PostMessage(AfxGetApp()->m_pMainWnd->GetSafeHwnd(), WM_UpdateLocalFolderPath, 0, 0);
 			strCount.Format(_T("开始第%d次上传任务"), ++count);
 			pushTrackInfo(strCount);
 			if (s_bStopTask)//如果要停止任务那么就跳出
@@ -120,8 +122,13 @@ DWORD WINAPI FtpConnecter::UploadeFile(LPVOID param)
 					bPut = pFtpconnection->PutFile(strFilePath, *iter);
 					if (!bPut)
 					{
+						pushTrackInfo(L"尝试失败 : " + strLocalPath + _T("\\") + *iter);
 						post2php.PostResult(strFilePath, PostMsg2Php::Upload, PostMsg2Php::Failed);
 						s_bHasUploadFailedFile = TRUE;
+					}
+					else 
+					{
+						pushTrackInfo(L"尝试成功 : " + strLocalPath + _T("\\") + *iter);
 					}
 				}
 			}
@@ -130,8 +137,9 @@ DWORD WINAPI FtpConnecter::UploadeFile(LPVOID param)
 				pFtpconnection->Close();
 				delete pFtpconnection;
 			}
-			strCount.Format(_T("第%d次上传任务完成, 成功%d个，失败%d个"), count, files.size()-s_FileFailedUpload.size(), s_FileFailedUpload.size());
+			strCount.Format(_T("第%d次上传任务完成,总共%d个, 成功%d个，失败%d个"), count, files.size(), files.size()-s_FileFailedUpload.size(), s_FileFailedUpload.size());
 			pushTrackInfo(strCount);
+			s_FileFailedUpload.clear();
 		}
 	}
 	catch (CInternetException* pEx)
