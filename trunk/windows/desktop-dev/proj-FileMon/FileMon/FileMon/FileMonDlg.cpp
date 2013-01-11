@@ -435,7 +435,7 @@ void CFileMonDlg::OnBnClickedBtntryconnect()
 		AfxMessageBox(_T("连接成功"));
 		//GetDlgItem(IDC_EdtRemotePath)->SetWindowText(m_FtpConnecter.getCurRemoteFolderPath());
 		//GetDlgItem(IDC_EdtLocalFolderPath)->SetWindowText(m_FtpConnecter.getCurLocalFolderPath());
-		//GetDlgItem(IDC_EdtuploadFileTime)->SetWindowText(m_FtpConnecter.getUploadBeginTime());
+		GetDlgItem(IDC_EdtuploadFileTime)->SetWindowText(m_FtpConnecter.getUploadBeginTime());
 		m_FtpConnecter.startUploadTask();
 	}
 	else
