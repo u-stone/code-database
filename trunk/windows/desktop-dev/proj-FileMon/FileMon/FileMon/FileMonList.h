@@ -73,18 +73,18 @@ private:
 	//rule:	当等待列表中变空时，尝试从本地序列化文件SERIALIZEDFILES中取出数据来放入等待队列
 	//		如果本地序列化文件中没有数据了，再从序列化队列中取出数据来放入等待队列
 	void fetchFilePath();
-	//Summary:
-	//		运行起php-cgi
-	void startPhpCgi();
-	//Summary:
-	//		向php-cgi传递参数, 
-	//param:
-	//		strFilePath	转换完成的文件路径
-	//		strRes	转换的结果，成功返回1，失败返回0
-	void sendData2Php(CString strFilePath, CString strRes);
-	//Summary:
-	//		向php-cgi收取数据
-	void recvDataFromPhp(CString& strData);
+// 	//Summary:
+// 	//		运行起php-cgi
+// 	void startPhpCgi();
+// 	//Summary:
+// 	//		向php-cgi传递参数, 
+// 	//param:
+// 	//		strFilePath	转换完成的文件路径
+// 	//		strRes	转换的结果，成功返回1，失败返回0
+// 	void sendData2Php(CString strFilePath, CString strRes);
+// 	//Summary:
+// 	//		向php-cgi收取数据
+// 	void recvDataFromPhp(CString& strData);
 
 private:
 	static FileMonList* s_Obj;
