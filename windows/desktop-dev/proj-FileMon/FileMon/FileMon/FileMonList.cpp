@@ -44,6 +44,7 @@ bool FileMonList::addMonFilePath(CString& strPath)
 	if (!checkFileType(strPath))
 		return false;
 	strPath.Trim();
+	//TryEnterCriticalSection()
 	EnterCriticalSection(&m_WaitListCS);
 	//如果该数据既没有在完成队列也没有在等待队列才添加到等待队列
 	if (m_FileFinishList.end() == find(m_FileFinishList.begin(), m_FileFinishList.end(), strPath))
@@ -335,48 +336,48 @@ void FileMonList::fetchFilePath()
 	}
 	LeaveCriticalSection(&m_WaitListCS);
 }
-void FileMonList::startPhpCgi()
-{
-	if (m_hStdoutR != NULL && m_hStdoutW != NULL)
-		return ;
-	SECURITY_ATTRIBUTES sa = {0};
-	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-	sa.bInheritHandle = 1;
-	sa.lpSecurityDescriptor = NULL;
-
-	CreatePipe(&m_hStdoutR, &m_hStdoutW, &sa, 0);
-	SetHandleInformation(m_hStdoutW, HANDLE_FLAG_INHERIT, 0);
-	
-	STARTUPINFO si = {0};
-	PROCESS_INFORMATION pi;
-	si.cb = sizeof(STARTUPINFO);
-	si.dwFlags = STARTF_USESTDHANDLES;
-	si.hStdOutput = m_hStdoutW;
-	si.hStdInput = m_hStdoutR;
-
-	char env[255] = "REQUEST_METHOD=POST\0CONTENT_LENGTH=18\0CONTENT_TYPE=application/x-www-form-urlencoded\0SCRIPT_FILENAME=F:\\backup\\test.html";
-	TCHAR cmdLine[MAX_PATH] = _T("F:\\backup\\php5\\php-cgi.exe F:\\backup\\test.html");
-	if(!CreateProcess(NULL, cmdLine,
-		NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, env, NULL, &si, &pi))
-		return ;
-}
-
-void FileMonList::sendData2Php(CString strFilePath, CString strRes)
-{
-	DWORD dwWritten = 0;
-	static char buf[2048] = {0};
-	ZeroMemory(buf, 2048);
-	static CString strSend = _T("filelName=") + strFilePath + _T(";convRes=") + strRes;
-	GlobalFunc::UnicodeToANSI(strSend, buf, 2048);
-	if(!WriteFile(m_hStdoutW, buf, 2048, &dwWritten, NULL))
-		return ;
-	pushTrackInfo(_T("调用了php页面"));
-}
-void FileMonList::recvDataFromPhp(CString& strData)
-{
-	char buf[1000] = {0};
-	DWORD dwRead = 0;
-	while(ReadFile(m_hStdoutR, buf, sizeof(buf), &dwRead, NULL) && dwRead != 0){
-		printf(buf);
-	}
-}
+//void FileMonList::startPhpCgi()
+//{
+//	if (m_hStdoutR != NULL && m_hStdoutW != NULL)
+//		return ;
+//	SECURITY_ATTRIBUTES sa = {0};
+//	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+//	sa.bInheritHandle = 1;
+//	sa.lpSecurityDescriptor = NULL;
+//
+//	CreatePipe(&m_hStdoutR, &m_hStdoutW, &sa, 0);
+//	SetHandleInformation(m_hStdoutW, HANDLE_FLAG_INHERIT, 0);
+//	
+//	STARTUPINFO si = {0};
+//	PROCESS_INFORMATION pi;
+//	si.cb = sizeof(STARTUPINFO);
+//	si.dwFlags = STARTF_USESTDHANDLES;
+//	si.hStdOutput = m_hStdoutW;
+//	si.hStdInput = m_hStdoutR;
+//
+//	char env[255] = "REQUEST_METHOD=POST\0CONTENT_LENGTH=18\0CONTENT_TYPE=application/x-www-form-urlencoded\0SCRIPT_FILENAME=F:\\backup\\test.html";
+//	TCHAR cmdLine[MAX_PATH] = _T("F:\\backup\\php5\\php-cgi.exe F:\\backup\\test.html");
+//	if(!CreateProcess(NULL, cmdLine,
+//		NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, env, NULL, &si, &pi))
+//		return ;
+//}
+//
+//void FileMonList::sendData2Php(CString strFilePath, CString strRes)
+//{
+//	DWORD dwWritten = 0;
+//	static char buf[2048] = {0};
+//	ZeroMemory(buf, 2048);
+//	static CString strSend = _T("filelName=") + strFilePath + _T(";convRes=") + strRes;
+//	GlobalFunc::UnicodeToANSI(strSend, buf, 2048);
+//	if(!WriteFile(m_hStdoutW, buf, 2048, &dwWritten, NULL))
+//		return ;
+//	pushTrackInfo(_T("调用了php页面"));
+//}
+//void FileMonList::recvDataFromPhp(CString& strData)
+//{
+//	char buf[1000] = {0};
+//	DWORD dwRead = 0;
+//	while(ReadFile(m_hStdoutR, buf, sizeof(buf), &dwRead, NULL) && dwRead != 0){
+//		printf(buf);
+//	}
+//}
