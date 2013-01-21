@@ -29,7 +29,7 @@ FtpConnecter::~FtpConnecter(void)
 //启动上传文件的线程
 DWORD WINAPI FtpConnecter::UploadeFile(LPVOID param)
 {
-	s_bThreadRunning = TRUE;
+	s_bThreadRunning = TRUE;//记录上传线程已启动
 	FtpInfo* pFtpInfo = (FtpInfo*)param;
 	//连接FTP服务器，并开始推送文件
 	static int count = 0;
@@ -43,10 +43,16 @@ DWORD WINAPI FtpConnecter::UploadeFile(LPVOID param)
 			pushTrackInfo(L"等待下一次上传任务");
 			if (WaitForSingleObject(pFtpInfo->_hWaitableTimer, INFINITE) != WAIT_OBJECT_0)
 				break;
-			pushTrackInfo(L"开始上传任务");
 			//更新本次上传的本地和远程文件夹的信息
 			PostMessage(AfxGetApp()->m_pMainWnd->GetSafeHwnd(), WM_UpdateRemoteFolderPath, 0, 0);
 			PostMessage(AfxGetApp()->m_pMainWnd->GetSafeHwnd(), WM_UpdateLocalFolderPath, 0, 0);
+			if (count == 0)
+			{
+				count++;
+				pushTrackInfo(L"首次启动FTP上传线程，不做上传任务");
+				continue;
+			}
+			pushTrackInfo(L"开始上传任务");
 			strCount.Format(_T("开始第%d次上传任务"), ++count);
 			pushTrackInfo(strCount);
 			if (s_bStopTask)//如果要停止任务那么就跳出
@@ -203,6 +209,7 @@ BOOL FtpConnecter::startUploadTask()
 		&m_liBeginTime,
 		m_lTimePeriod,
 		NULL, NULL, TRUE);//支持唤醒计算机<TRUE>
+	//CloseHandle(m_FtpInfo._hWaitableTimer);//在本对象析构的时候才关闭这个句柄
 	return TRUE;
 }
 //测试设置的FTP信息是否可以连的上FTP服务器，连接的上就返回true，否则返回false
@@ -238,7 +245,7 @@ void FtpConnecter::initTimeInfo()
 	st.wMonth = 5;
 	st.wDayOfWeek = 0;
 	st.wDay = 26;
-	st.wHour = 11;
+	st.wHour = 2;
 	st.wMinute = 0;
 	st.wSecond = 0;
 	st.wMilliseconds = 0;

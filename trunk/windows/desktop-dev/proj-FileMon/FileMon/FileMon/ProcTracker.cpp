@@ -53,8 +53,8 @@ void ProcTracker::getTrackerInfo(std::list<CString>& trackInfo)
 void ProcTracker::pushTrackInfo(CString& strTrack)
 {
 	EnterCriticalSection(&m_TrackInfoListCS);
-	while (m_TrackInfoList.size() >= m_InfoUpperLimit)
-		m_TrackInfoList.pop_front();
+	//while (m_TrackInfoList.size() >= m_InfoUpperLimit)
+	//	m_TrackInfoList.pop_front();
 	static int count = 0;
 	count++;
 	if (count > MAX_TRACKINFO || m_bForceInfo2File)
@@ -122,11 +122,11 @@ void ProcTracker::TrackInfo2File()
 	HANDLE hFile = CreateFile(strPath, FILE_APPEND_DATA, 0, &sa, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
+		m_TrackInfoList.clear();//仍然要清空内存
 		CString str = _T("检测到跟踪信息超出额定数量，在将跟踪信息数据写入本地文件时失败！");
 		pushTrackInfo(str);
 		str = GlobalFunc::formatErrorCode(GetLastError());
 		pushTrackInfo(str);
-		m_TrackInfoList.clear();//仍然要清空内存
 		return ;
 	}
 	DWORD dwByteWritten = 0;

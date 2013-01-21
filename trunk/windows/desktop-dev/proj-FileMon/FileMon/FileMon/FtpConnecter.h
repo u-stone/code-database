@@ -90,5 +90,5 @@ private:
 	FtpInfo		m_FtpInfo;				//!< FTP服务器的信息
 	static CString		s_strLocalRootPath;		//!< 本地上传文件的根目录
 	static CString		s_strRemoteRootPath;		//!< FTP服务器上存放上传文件的根目录
-	static std::vector<CString> s_FileFailedUpload;	//!< 上传失败的文件
+	static std::vector<CString> s_FileFailedUpload;	//!< 上传失败的文件，<目前相当于一个临时变量>
 };
