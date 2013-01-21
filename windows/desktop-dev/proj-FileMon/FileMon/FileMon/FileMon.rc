@@ -109,7 +109,7 @@ BEGIN
     EDITTEXT        IDC_EdtuploadFileTime,8,299,153,12,ES_AUTOHSCROLL | ES_READONLY | WS_GROUP
     PUSHBUTTON      "启动监视",IDC_BtnMonitoring,9,322,62,14,WS_GROUP
     PUSHBUTTON      "启动转换图纸程序",IDC_BtnExeConvertProc,98,322,62,14,WS_GROUP
-    DEFPUSHBUTTON   "关闭界面",IDOK,123,356,37,14,WS_GROUP
+    DEFPUSHBUTTON   "关闭界面",IDOK,98,355,62,14,WS_GROUP
     LTEXT           "FTP服务器   IP：",IDC_STATIC,9,130,54,8
     LTEXT           "FTP服务器 Port：",IDC_STATIC,9,146,56,8
     LTEXT           "用户名：",IDC_STATIC,9,162,28,8
@@ -124,7 +124,7 @@ BEGIN
     LTEXT           "当前本地的文件路径：",IDC_STATIC,9,231,70,8
     EDITTEXT        IDC_EdtLocalFolderPath,8,242,153,12,ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON      "将日志写入文件",IDC_BtnFlushLog,9,339,62,14
-    PUSHBUTTON      "隐藏控制台程序",IDC_BtnSwitchConsole,98,339,62,14
+    PUSHBUTTON      "隐藏控制台程序",IDC_BtnSwitchConsole,98,339,62,14,NOT WS_VISIBLE
 END
 
 
@@ -151,7 +151,7 @@ BEGIN
         BLOCK "080403a8"
         BEGIN
             VALUE "CompanyName", "AEC"
-            VALUE "FileDescription", "管理用户上传dwg文件到wmf的转化"
+            VALUE "FileDescription", "管理用户上传DWG文件到WMF的转化，并负责检测磁盘上新出现的PDF文件，报告给PHP页面"
             VALUE "FileVersion", "V 1.0"
             VALUE "InternalName", "FileMon.exe"
             VALUE "LegalCopyright", "AEC"

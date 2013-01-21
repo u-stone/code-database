@@ -314,6 +314,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SwitchBufServer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SwitchBufServer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\WinFileMon.cpp"
 				>
 			</File>

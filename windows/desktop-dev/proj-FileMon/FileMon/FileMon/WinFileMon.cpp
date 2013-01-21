@@ -197,7 +197,7 @@ DWORD WinFileMon::monitor(LPVOID param)
 					FileMonList::getFileListObj()->addMonFilePath(str);
 					delete []buf;
 					buf = NULL;
-					pushTrackInfo(_T("添加文件: ") + str);
+					//pushTrackInfo(_T("添加文件: ") + str);
 					break;
 				}
 			case FILE_ACTION_REMOVED://删除文件
@@ -210,7 +210,7 @@ DWORD WinFileMon::monitor(LPVOID param)
 						str = pData->_dir + str;
 					else
 						str = pData->_dir + _T("\\") + str;
-					pushTrackInfo(_T("删除文件: ") + str);
+					//pushTrackInfo(_T("删除文件: ") + str);
 					delete []buf;
 					buf = NULL;
 					break;

@@ -227,6 +227,7 @@ void CFileMonDlg::OnBnClickedBtnmonitoring()
 	}
 	//开始调度
 	ConvertManager::getConvertManagerObj()->startManager();
+	GetDlgItem(IDC_BtnDelPath)->EnableWindow(FALSE);
 }
 
 void CFileMonDlg::OnBnClickedBtnaddpath()
@@ -258,7 +259,7 @@ void CFileMonDlg::OnBnClickedBtndelpath()
 	CString strPath;
 	int indexes[255] = {0};
 	m_PathListCtrl.GetSelItems(255, indexes);
-	for (int i = 0; i < m_PathListCtrl.GetSelCount(); ++i)
+	for (int i = 0; i < m_PathListCtrl.GetCount(); ++i)
 	{
 		m_PathListCtrl.GetText(indexes[i], strPath);
 		std::vector<CString>::iterator  iter = find(m_Dirs.begin(), m_Dirs.end(), strPath);
@@ -493,6 +494,7 @@ LRESULT CFileMonDlg::OnUpdateLocalFolderPath(WPARAM wParam, LPARAM lParam)
 
 void CFileMonDlg::PreExit()
 {
+	ProcTracker::getTracker()->ForceInfo2File();
 	Shell_NotifyIcon(NIM_DELETE,&m_traydata);
 }
 void CFileMonDlg::OnDestroy()

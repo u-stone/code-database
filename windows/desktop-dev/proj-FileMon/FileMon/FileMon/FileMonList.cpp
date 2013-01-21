@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "FileMonList.h"
+#include "PostMsg2Php.h"
 
 FileMonList* FileMonList::s_Obj = NULL;
 FileMonList::FileMonList(void)
@@ -8,10 +9,11 @@ FileMonList::FileMonList(void)
 	m_WaitListMaxSize = MAXWAITLISTSIZE;
 	m_FinishListMaxSize = MAXFINISHLISTSIZE;
 	m_SerializeListMaxSize = MAXSERIALIZESIZE;
-	m_strFileExt = _T("dwg");
+	//m_strFileExt = _T("dwg");
 	m_hAskForConvert = NULL;
 	m_hStdoutR = NULL;
 	m_hStdoutW = NULL;
+	m_pSwitchBuf = NULL;
 	init();
 }
 
@@ -41,18 +43,34 @@ void FileMonList::deleteListObj()
 
 bool FileMonList::addMonFilePath(CString& strPath)
 {
-	if (!checkFileType(strPath))
-		return false;
 	strPath.Trim();
-	//TryEnterCriticalSection()
-	EnterCriticalSection(&m_WaitListCS);
-	//如果该数据既没有在完成队列也没有在等待队列才添加到等待队列
-	if (m_FileFinishList.end() == find(m_FileFinishList.begin(), m_FileFinishList.end(), strPath))
-		if (m_FileWaitList.end() == find(m_FileWaitList.begin(), m_FileWaitList.end(), strPath))
-			cacheFilePath(strPath);//尝试将数据放入等待队列
-	LeaveCriticalSection(&m_WaitListCS);
+	if (FileMonList::UnknownFile != checkFileType(strPath))//只要是可以识别的文件类型就添加到缓存中
+		m_pSwitchBuf->pushData(strPath);
 	return true;
 }
+void FileMonList::addFilePathToList(CString strPath)
+{
+	//不同的文件处理方法不一样
+	if (strPath.Right(3).CompareNoCase(L"dwg") == 0)//处理DWG文件
+	{
+		pushTrackInfo(L"尝试将DWG文件添加到cache中 : " + strPath);
+		EnterCriticalSection(&m_WaitListCS);
+		//因为只是检查完成队列和等待队列，而写入等待队列，所以只需要对等待队列进行锁定
+		//如果该数据既没有在完成队列也没有在等待队列才添加到等待队列
+		if (m_FileFinishList.end() == find(m_FileFinishList.begin(), m_FileFinishList.end(), strPath))
+			if (m_FileWaitList.end() == find(m_FileWaitList.begin(), m_FileWaitList.end(), strPath))
+				cacheFilePath(strPath);//尝试将数据放入等待队列
+		LeaveCriticalSection(&m_WaitListCS);	
+	}
+	else if (strPath.Right(3).CompareNoCase(L"pdf") == 0)//处理PDF文件
+	{
+		//这里需要调用php的一个页面
+		pushTrackInfo(L"尝试将PDF文件添加到cache中 : " + strPath);
+		static PostMsg2Php msg2php;
+		msg2php.PostDataForPdfFile(strPath);
+	}
+}
+
 bool FileMonList::finishOpFilePath(CString& strPath)
 {
 	//startPhpCgi();
@@ -77,7 +95,6 @@ bool FileMonList::finishOpFilePath(CString& strPath)
 	}
 	LeaveCriticalSection(&m_finishListCS);
 	LeaveCriticalSection(&m_WaitListCS);
-	sendData2Php(strPath, bRes ? _T("1") : _T("0"));
 	return bRes;
 }
 void FileMonList::clear()
@@ -101,6 +118,18 @@ void FileMonList::init()
 	m_hAskForConvert = OpenEvent(EVENT_ALL_ACCESS, FALSE, CONVERT_ASKFOR);
 	if (NULL == m_hAskForConvert)
 		return ;
+
+	m_TransDataThreadInfo._FileMonList = this;
+	m_TransDataThreadInfo._pcs = &m_WaitListCS;
+	//注意:	必须先创建SwitchBufServer对象，其内部会创建一个SWITCHBUF2MONLIST事件，创建好之后才能成功打开该事件，
+	//		并赋值给m_TransDataThreadInfo._hBuf2List
+	m_pSwitchBuf = m_TransDataThreadInfo._pSwitchBuf = new SwitchBufServer(BUF2CACHEEVENT);
+	m_TransDataThreadInfo._hBuf2ListEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, BUF2CACHEEVENT);
+
+	DWORD id;
+	HANDLE hTrd = CreateThread(&sa, 0, (LPTHREAD_START_ROUTINE)transDataFromBuf2MonList, (void*)&m_TransDataThreadInfo, 0, &id);
+	CloseHandle(hTrd);
+
 	pushTrackInfo(_T("请求转换事件创建完毕"));
 }
 bool FileMonList::getNextFileObj(CString& strFilePath)
@@ -115,12 +144,37 @@ bool FileMonList::getNextFileObj(CString& strFilePath)
 	strFilePath = m_FileWaitList[0];
 	return true;
 }
-void FileMonList::setFileFilter(CString& strFileExt)
+//void FileMonList::setFileFilter(CString& strFileExt)
+//{
+//	strFileExt.Trim();
+//	m_strFileExt = strFileExt;
+//}
+//将switchbuf中的数据转移到cache的线程
+DWORD FileMonList::transDataFromBuf2MonList(void* pParam)
 {
-	strFileExt.Trim();
-	m_strFileExt = strFileExt;
+	BufInfoForThread* pInfo = (BufInfoForThread*)pParam;
+	CString	 strData;
+	pushTrackInfo(L"将buf中数据移动至cache的线程 开启");
+	while (1)
+	{
+		pushTrackInfo(L"等待转移数据");
+		if (WaitForSingleObject(pInfo->_hBuf2ListEvent, INFINITE) == WAIT_OBJECT_0)
+		{
+			pushTrackInfo(L"准备转移下一个数据");
+			bool ret = pInfo->_pSwitchBuf->getData(strData);
+			while (ret || !strData.IsEmpty())
+			{
+				if (!strData.IsEmpty())
+					pInfo->_FileMonList->addFilePathToList(strData);
+				strData.Empty();
+				ret = pInfo->_pSwitchBuf->getData(strData);//得到BUF中的下一个文件路径
+			}
+			ResetEvent(pInfo->_hBuf2ListEvent);
+		}
+	}
+	pushTrackInfo(L"关闭将buf中数据移动至cache的线程");
+	return 0;
 }
-
 //Summary:
 //	添加跟踪信息，为了调试使用
 void FileMonList::pushTrackInfo(LPCTSTR info)
@@ -132,15 +186,17 @@ void FileMonList::pushTrackInfo(LPCTSTR info)
 	ProcTracker::getTracker()->pushTrackInfo(str);
 }
 
-bool FileMonList::checkFileType(CString& strFilePath)
+FileMonList::FileType FileMonList::checkFileType(CString& strFilePath)
 {
 	strFilePath.Trim();
 	static CString str;
 	str = strFilePath.Right(3);
-	if (str.CompareNoCase(m_strFileExt) == 0)
-		return true;
+	if (str.CompareNoCase(L"dwg") == 0)
+		return FileMonList::DwgFile;
+	else if (str.CompareNoCase(L"pdf") == 0)
+		return FileMonList::PdfFile;
 	else
-		return false;
+		return FileMonList::UnknownFile;
 }
 void FileMonList::setWaitFileListMaxSize(size_t mz)
 {
@@ -159,7 +215,7 @@ BOOL FileMonList::checkFinishOp(CString strParam)
 	int pos = strParam.ReverseFind(_T('.'));
 	if (pos == -1)
 		return FALSE;
-	strParam = strParam.Left(pos + 1) + _T("emf");
+	strParam = strParam.Left(pos + 1) + TARGETCONVERTEDFILE;
 	if (GlobalFunc::UnicodeToANSI(strParam, buf, MAX_PATH))
 	{
 		//OFSTRUCT of;
