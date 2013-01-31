@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Office2Pdf")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("番茄花园")]
+[assembly: AssemblyCompany("TMG-AEC")]
 [assembly: AssemblyProduct("Office2Pdf")]
-[assembly: AssemblyCopyright("Copyright © 番茄花园 2013")]
+[assembly: AssemblyCopyright("Copyright © TMG-AEC")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
