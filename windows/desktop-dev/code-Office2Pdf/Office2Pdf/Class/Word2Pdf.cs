@@ -81,7 +81,7 @@ namespace Office2Pdf
                     System.Runtime.InteropServices.Marshal.ReleaseComObject(wordApp);
                 }
                 PostHttpMsg pm = new PostHttpMsg();
-                pm.DataPost = m_FilePathWord;
+                pm.DataPost = strPdf + ".pdf";
                 pm.PostMsg();
             }
             catch (System.Exception ex)

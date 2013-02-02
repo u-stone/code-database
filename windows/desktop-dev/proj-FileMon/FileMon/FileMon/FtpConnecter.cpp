@@ -172,7 +172,9 @@ void FtpConnecter::setFtpinfo(CString& _strFtpServerIp, CString& _strUserName, C
 //设置开始上传的时间
 void FtpConnecter::setBeginTime(SYSTEMTIME& beginTimeSt)
 {
-	SystemTimeToFileTime(&beginTimeSt, &m_BeginTimeFT);
+	FILETIME ft;
+	SystemTimeToFileTime(&beginTimeSt, &ft);
+	LocalFileTimeToFileTime(&ft, &m_BeginTimeFT);
 	m_liBeginTime.LowPart = m_BeginTimeFT.dwLowDateTime;
 	m_liBeginTime.HighPart = m_BeginTimeFT.dwHighDateTime;
 }
@@ -245,8 +247,8 @@ void FtpConnecter::initTimeInfo()
 	st.wMonth = 5;
 	st.wDayOfWeek = 0;
 	st.wDay = 26;
-	st.wHour = 2;
-	st.wMinute = 0;
+	st.wHour = 17;
+	st.wMinute = 45;
 	st.wSecond = 0;
 	st.wMilliseconds = 0;
 	setBeginTime(st);
@@ -302,6 +304,7 @@ BOOL FtpConnecter::getAllFilesUpload(std::vector<CString>& files)
 	BOOL res = ff.FindFile(str);
 	if (!res)
 		return FALSE;
+	pushTrackInfo(L"开始搜索待上传文件");
 	while (res)
 	{
 		res = ff.FindNextFile();
@@ -309,8 +312,10 @@ BOOL FtpConnecter::getAllFilesUpload(std::vector<CString>& files)
 		if (!ff.IsDirectory() && !ff.IsDots())
 		{
 			files.push_back(ff.GetFileName());
+			pushTrackInfo(L"待上传文件:" + ff.GetFileName());
 		}
 	}
+	pushTrackInfo(L"待上传文件搜索完毕");
 	ff.Close();
 	return TRUE;
 }
@@ -375,7 +380,9 @@ BOOL FtpConnecter::getThreadRunning()
 CString FtpConnecter::getUploadBeginTime()
 {
 	SYSTEMTIME st;
-	FileTimeToSystemTime(&m_BeginTimeFT, &st);
+	FILETIME lft;
+	FileTimeToLocalFileTime(&m_BeginTimeFT, &lft);
+	FileTimeToSystemTime(&lft, &st);
 	CString str;
 	if (st.wHour <= 12)
 		str.Format(_T("上午%02d:%02d:%02d"), st.wHour, st.wMinute, st.wSecond);

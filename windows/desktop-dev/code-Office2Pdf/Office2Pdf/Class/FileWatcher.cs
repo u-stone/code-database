@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Security.Permissions;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace Office2Pdf
 {

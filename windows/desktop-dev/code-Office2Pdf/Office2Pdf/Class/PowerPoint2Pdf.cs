@@ -59,7 +59,7 @@ namespace Office2Pdf
                     System.Runtime.InteropServices.Marshal.ReleaseComObject(pptApp);
                 }
                 PostHttpMsg pm = new PostHttpMsg();
-                pm.DataPost = m_FilePathPowerPoint;
+                pm.DataPost = strPdf;
                 pm.PostMsg();
             }
             catch (System.Exception e)

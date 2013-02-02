@@ -54,6 +54,7 @@ namespace Office2Pdf
             if (this.WindowState == FormWindowState.Minimized)
             {
                 this.Hide();
+                ShowInTaskbar = false;
                 this.Office2Pdf.Visible = true;
             }
         }
@@ -135,6 +136,7 @@ namespace Office2Pdf
         {
             Visible = true;
             WindowState = FormWindowState.Normal;
+            ShowInTaskbar = true;
             Office2Pdf.Visible = false;
         }
     }

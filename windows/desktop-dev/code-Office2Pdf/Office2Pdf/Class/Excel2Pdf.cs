@@ -57,7 +57,7 @@ namespace Office2Pdf
                     System.Runtime.InteropServices.Marshal.ReleaseComObject(xlsApp);
                 }
                 PostHttpMsg pm = new PostHttpMsg();
-                pm.DataPost = m_FilePathExcel;
+                pm.DataPost = strXls;
                 pm.PostMsg();
             }
             catch (System.Exception e)
