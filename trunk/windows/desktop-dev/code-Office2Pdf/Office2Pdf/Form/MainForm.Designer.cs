@@ -92,7 +92,6 @@
             this.Controls.Add(this.MonPathList);
             this.Controls.Add(this.ChooseMonitorFolder);
             this.Name = "MainForm";
-            this.ShowInTaskbar = false;
             this.Text = "Office转Pdf";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.ResumeLayout(false);

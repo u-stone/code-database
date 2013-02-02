@@ -13,7 +13,7 @@ namespace Office2Pdf
     /// </summary>
     class PostHttpMsg
     {
-        private string m_Url = "dl.hao2580.com/tpdf/php/services/view2.php";//"http://www.contoso.com/example.aspx"
+        private string m_Url = "http://dl.hao2580.com/tpdf/php/services/view2.php";//"http://www.contoso.com/example.aspx"
         private string m_Data = "";
         private ManualResetEvent allDone = new ManualResetEvent(false);
         public long PostMsg()
@@ -53,7 +53,7 @@ namespace Office2Pdf
             //将字符串转化为字节数组
             byte[] byteArray = Encoding.UTF8.GetBytes(postData);
             //向请求流中写入字节
-            postStream.Write(byteArray , 0 , postData.Length);
+            postStream.Write(byteArray, 0, byteArray.Length);
 
             postStream.Close();
             postStream.Dispose();

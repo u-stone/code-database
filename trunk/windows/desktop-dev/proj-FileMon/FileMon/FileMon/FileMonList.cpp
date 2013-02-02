@@ -51,7 +51,10 @@ bool FileMonList::addMonFilePath(CString& strPath)
 void FileMonList::addFilePathToList(CString strPath)
 {
 	//不同的文件处理方法不一样
-	if (strPath.Right(3).CompareNoCase(L"dwg") == 0)//处理DWG文件
+	static CString DwgFileExt = L"dwg";
+	static CString PdfFileExt = L"pdf";
+	CString strExt = strPath.Right(strPath.GetLength() - strPath.ReverseFind(L'.') - 1);
+	if (strExt.CompareNoCase(DwgFileExt) == 0)//处理DWG文件
 	{
 		pushTrackInfo(L"尝试将DWG文件添加到cache中 : " + strPath);
 		EnterCriticalSection(&m_WaitListCS);
@@ -62,7 +65,7 @@ void FileMonList::addFilePathToList(CString strPath)
 				cacheFilePath(strPath);//尝试将数据放入等待队列
 		LeaveCriticalSection(&m_WaitListCS);	
 	}
-	else if (strPath.Right(3).CompareNoCase(L"pdf") == 0)//处理PDF文件
+	else if (strExt.CompareNoCase(PdfFileExt) == 0)//处理PDF文件
 	{
 		//这里需要调用php的一个页面
 		pushTrackInfo(L"尝试将PDF文件添加到cache中 : " + strPath);
