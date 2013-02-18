@@ -1,15 +1,37 @@
-待处理问题： 1. 相交（与GripPoint相同采用PE实现）mine 2. 显示优化（一，屏幕显示过小不显示；二， 效果增强；三，显示流程优化） 3. 交互 4. 实体属性
+============================================================================================
+待处理问题： 
+	1. 相交（与GripPoint相同采用PE实现）mine 
+	2. 显示优化（一，屏幕显示过小不显示；二， 效果增强；三，显示流程优化） 
+	3. 交互 
+	4. 实体属性
 
-
+============================================================================================
 Oda使用注意事项： 
-1） 打开数据库使用openObject并判断返回值， safeopenObject需要try catch 
-2) OdUInt32 subSetAttributes(OdGiDrawableTraits* pTraits) const 
-{ 
-   odGiSubEntityTraitsPtr pEntityTraits = OdGiSubEntityTraits::cast(pTraits); 
-   if(pEntityTraits.isNull()) 
-     return kDrawableNone; 
+	1） 打开数据库使用openObject并判断返回值， safeopenObject需要try catch 
+	2) OdUInt32 subSetAttributes(OdGiDrawableTraits* pTraits) const 
+	{ 
+	   odGiSubEntityTraitsPtr pEntityTraits = OdGiSubEntityTraits::cast(pTraits); 
+	   if(pEntityTraits.isNull()) 
+		 return kDrawableNone; 
+	}
+	3) subWorldDraw 返回值如为false, 将调用subViewportDraw
 
-3) subWorldDraw 返回值如为false, 将调用subViewportDraw
+============================================================================================
+AutoCAD快捷键:
+	Ctrl + O 打开文件 
+	Ctrl + S 保存文件 
+	Ctrl + P 打印 
+	Ctrl + Z 撤销 
+	Ctrl + Y 重做 
+	MiniCAD其它功能建议命令 
+	Ctrl + R 实时放缩 
+	Ctrl + W 框选放大 
+	Ctrl + E 范围 
+	Ctrl + D 删除 
+	Ctrl + T 文字标注
 
-
- AutoCAD快捷键 Ctrl + O 打开文件 Ctrl + S 保存文件 Ctrl + P 打印 Ctrl + Z 撤销 Ctrl + Y 重做 MiniCAD其它功能建议命令 Ctrl + R 实时放缩 Ctrl + W 框选放大 Ctrl + E 范围 Ctrl + D 删除 Ctrl + T 文字标注
+============================================================================================
+在操作对象的时候，比如说使用修剪功能，如果在得到对象的时候，使用的是对象的指针，那么后续使用的时候，
+使用的就是这个指针对象，这时候对象没有被释放，那么在操作过程中就不会有刷新，如果使用的是ID，每次使用
+的时候将使用ID得到对象指针，每次使用完，就会由智能指针或者是直接使用对象的release函数来释放对象，那么
+在刷新的时候就会实时地改变对象的状态。
