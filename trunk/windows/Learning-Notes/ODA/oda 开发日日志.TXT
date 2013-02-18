@@ -1,7 +1,15 @@
-待处理问题： 1. 相交（与GripPoint相同采用PE实现） 2. 显示优化（一，屏幕显示过小不显示；二， 效果增强；三，显示流程优化） 3. 交互 4. 实体属性
+待处理问题： 1. 相交（与GripPoint相同采用PE实现）mine 2. 显示优化（一，屏幕显示过小不显示；二， 效果增强；三，显示流程优化） 3. 交互 4. 实体属性
 
 
-Oda使用注意事项： 1） 打开数据库使用openObject并判断返回值， safeObject需要try catch 2) OdUInt32 subSetAttributes(OdGiDrawableTraits* pTraits) const { odGiSubEntityTraitsPtr pEntityTraits = OdGiSubEntityTraits::cast(pTraits); if(pEntityTraits.isNull()) return kDrawableNone; 3) subWorldDraw 返回值如为false, 将调用subViewportDraw
+Oda使用注意事项： 
+1） 打开数据库使用openObject并判断返回值， safeopenObject需要try catch 
+2) OdUInt32 subSetAttributes(OdGiDrawableTraits* pTraits) const 
+{ 
+   odGiSubEntityTraitsPtr pEntityTraits = OdGiSubEntityTraits::cast(pTraits); 
+   if(pEntityTraits.isNull()) 
+     return kDrawableNone; 
+
+3) subWorldDraw 返回值如为false, 将调用subViewportDraw
 
 
  AutoCAD快捷键 Ctrl + O 打开文件 Ctrl + S 保存文件 Ctrl + P 打印 Ctrl + Z 撤销 Ctrl + Y 重做 MiniCAD其它功能建议命令 Ctrl + R 实时放缩 Ctrl + W 框选放大 Ctrl + E 范围 Ctrl + D 删除 Ctrl + T 文字标注
