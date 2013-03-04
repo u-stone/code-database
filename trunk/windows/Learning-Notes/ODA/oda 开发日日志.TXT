@@ -35,3 +35,36 @@ AutoCAD快捷键:
 使用的就是这个指针对象，这时候对象没有被释放，那么在操作过程中就不会有刷新，如果使用的是ID，每次使用
 的时候将使用ID得到对象指针，每次使用完，就会由智能指针或者是直接使用对象的release函数来释放对象，那么
 在刷新的时候就会实时地改变对象的状态。
+
+
+============================================================================================
+命令交互 改造提示：
+
+1. ID定义：
+#define IDS_SPECIFY_FIRSTPOINT          5000
+#define IDS_SPECIFY_NEXTPOINT           5001
+#define IDS_SPECIFY_STARTPOINT          5002
+#define IDS_SPECIFY_ENDPOINT            5003
+#define IDS_SPECIFY_MIDPOINT            5004
+#define IDS_SPECIFY_EDGENUMBER          5005
+从5000开始顺着增加
+
+2. 资源
+//For Commands
+STRINGTABLE 
+BEGIN
+    IDS_SPECIFY_FIRSTPOINT    "请输入第一个点坐标"    //Please specify first point
+	IDS_SPECIFY_NEXTPOINT     "请输入下一个点坐标"    //Please specify next point
+	IDS_SPECIFY_STARTPOINT    "请输入起始点坐标"      //Please specify start point  
+	IDS_SPECIFY_ENDPOINT      "请输入终点坐标"        //Please specify end point
+	IDS_SPECIFY_MIDPOINT      "请输入中心点坐标"      //Please specify center point
+	IDS_SPECIFY_EDGENUMBER    "请输入多边形边数(>3)"  //Please specify number of edges(>3)
+END
+
+3. 用法：
+(OdString)GlobalShared::ResourceString(IDS_SPECIFY_MIDPOINT, _T("Specify center point"))
+
+4.命令文件添加 #include "../resource.h"
+
+
+ 各自命令各自添加，请抽空尽快处理
