@@ -1,0 +1,46 @@
+先研究ODA如何进行插件扩展：
+这里有两条主线和一个辅助工具。首先说这两条主线：一是ODA里面基本对象的继承体系(继承于OdRxObject)，一是为了扩展做的扩展(PE)体系，当然这个扩展体系的根也是属于ODA基本继承体系的(继承于OdRxObject)，这样可以使用ODA的运行时判断。剩下的一个辅助工具是帮助扩展的OdRxClass继承体系(OdRxClass也是继承于OdRxObject)。
+ODA在扩展功能的时候使用了这样的一种思路：在基本对象继承体系中通过多层次的继承，基本实体类得到有多种方法，而这些方法中有多是呈现功能聚集现象的，就是说某一类功能很相近，可以考虑把这些功能放在一起实现，扩展出来。比如说相交函数系列，曲线投影和最近点计算系列，偏移功能系列等，甚至包括显示功能系列函数。ODA的做法是通过一个继承于OdRxObject的新继承体系，把各系列需要继承的体系封装成一个个的新的接口，而对于被扩展的对象那一端，则是在需要使用可能被扩展了的功能的时候，做一个判断：如果的确是做了扩展，那么就调用扩展的插件，如果没有，那么就使用系统默认的功能。那么这样就只剩下最后一个问题：如何知道是否被扩展了呢？这里就涉及到上面说的那个工具，这个工具有如下功能：
+1. 维护一个扩展列表，从这个列表中可以查到是否扩展了某类对象的功能。
+2. 如果扩展了原来的功能，那么就要在需要的时候可以返回一个对象来处理扩展了的功能。
+反观被扩展对象需要提供如下功能：
+3. 提供扩展的接口。
+4. 提供删除扩展的接口。
+举个例子，比如说直线对象的相交功能的扩展。因为相交功能是由OdDbEntity类提供并做了实现的，所以扩展判断也在该类中。查看代码就可以知道在其函数intersectWith中做了扩展判断，在其实现函数subIntersectWith中使用了工具OdDbEntityIntersectionPE(派生自OdRxObject)类。而关于是否做了扩展则是运用了规则1，如果的确做了扩展，那么就应用规则2返回处理对象。接着谈直线类的相交函数，除了使用自身的扩展判断OdDbEntityIntersectionPE::cast(this)之外，还需要关注一点，作为插件的扩展(一般是以dll的形式)，如何让直线类知道自己“被扩展”了呢？ODA的做法是，使用规则3，让直线类自己维护一个全局的类静态链表，需要做扩展的时候，就添加一个新的对象进来，这个时机就是在dll被插入进来的时候。而在使用规则1的时候，就是对这个链表做判断，确切地说是查找，做类型判断，一旦查到那就是说做了扩展，如果没有，那么就是没有做扩展。
+下面看代码：
+这是直线是否做了扩展
+OdResult OdDbEntity::subIntersectWith(const OdDbEntity* pEnt, OdDb::Intersect intType,
+                   const OdGePlane& projPlane, OdGePoint3dArray& points,
+                   OdGsMarker thisGsMarker, OdGsMarker otherGsMarker) const
+{
+  OdDbEntityIntersectionPEPtr ex = OdDbEntityIntersectionPE::cast(this);
+  if (ex.isNull())
+  {
+    return eNotImplemented;
+  }
+  else
+  {
+    return ex->intersectWith(this, pEnt, intType, projPlane, points, thisGsMarker, otherGsMarker);
+  }
+}
+
+而在相交插件插入进来的时候，需要做一些动作，告诉相关类做了dll的扩展
+void IntersectModule::initApp()
+{
+	if ( !OdDbEntity::desc() )
+	{
+		throw OdError(eNotInitializedYet);
+	}
+	OdDbEntity::desc()->module()->addRef();
+
+	OdDbLine::desc()->addX(OdDbEntityIntersectionPE::desc(), &_intDispath);
+	OdDbXline::desc()->addX(OdDbEntityIntersectionPE::desc(), &_intDispath);
+	OdDbRay::desc()->addX(OdDbEntityIntersectionPE::desc(), &_intDispath);
+	OdDbArc::desc()->addX(OdDbEntityIntersectionPE::desc(), &_intDispath);
+	OdDbCircle::desc()->addX(OdDbEntityIntersectionPE::desc(), &_intDispath);
+	OdDbEllipse::desc()->addX(OdDbEntityIntersectionPE::desc(), &_intDispath);
+	OdDbPolyline::desc()->addX(OdDbEntityIntersectionPE::desc(), &_intPL);
+	OdDbBlockReference::desc()->addX(OdDbEntityIntersectionPE::desc(), &_intPL);
+	//OdDbEntity::desc()->addX(OdDbEntityIntersectionPE::desc(), &_intDispath);
+}
+这样就使得直线段，直线，射线，弧，圆，椭圆，多段线，块对象在各自的扩展链表中具有了一个关于相交的扩展插件的节点。
