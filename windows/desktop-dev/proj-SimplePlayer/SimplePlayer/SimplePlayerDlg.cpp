@@ -67,6 +67,8 @@ BEGIN_MESSAGE_MAP(CSimplePlayerDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BtnOpenFile, &CSimplePlayerDlg::OnBnClickedBtnopenfile)
 	ON_BN_CLICKED(IDC_BtnPlay, &CSimplePlayerDlg::OnBnClickedBtnplay)
 	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_BtbStop, &CSimplePlayerDlg::OnBnClickedBtbstop)
+	ON_BN_CLICKED(IDC_BtnRestart, &CSimplePlayerDlg::OnBnClickedBtnrestart)
 END_MESSAGE_MAP()
 
 
@@ -168,9 +170,8 @@ void CSimplePlayerDlg::OnBnClickedBtnopenfile()
 
 void CSimplePlayerDlg::OnBnClickedBtnplay()
 {
-	if (m_pPalyer != NULL)
-		return ;
-	m_pPalyer = new WavePlayer(m_pIDS);
+	if (m_pPalyer == NULL)
+		m_pPalyer = new WavePlayer(m_pIDS);
 	CString strFilePath;
 	GetDlgItem(IDC_EdtFilePath)->GetWindowText(strFilePath);	
 	m_pPalyer->Play(strFilePath);
@@ -211,14 +212,14 @@ BOOL CSimplePlayerDlg::InitDS()
 
 BOOL CSimplePlayerDlg::UninitDS()
 {
-	if (m_pIDS != NULL){
-		CoUninitialize();
-		m_pIDS->Release();
-		m_pIDS = NULL;
-	}
 	if (m_pPalyer != NULL){
 		delete m_pPalyer;
 		m_pPalyer = NULL;
+	}
+	if (m_pIDS != NULL){//必须后释放设备，否则会出现释放错误
+		CoUninitialize();
+		m_pIDS->Release();
+		m_pIDS = NULL;
 	}
 	return TRUE;
 }
@@ -241,7 +242,7 @@ BOOL CSimplePlayerDlg::CreatePrimaryDSB()
 	pwf->nBlockAlign = 4;
 	pwf->wBitsPerSample = 16;
 
-	HRESULT hr = m_pIDS->SetCooperativeLevel(m_hPlayer, DSSCL_PRIORITY);
+	HRESULT hr = m_pIDS->SetCooperativeLevel(m_hPlayer, DSSCL_NORMAL);
 	DSBUFFERDESC dsbd;
 	if (SUCCEEDED(hr)){
 		ZeroMemory(&dsbd, sizeof(DSBUFFERDESC));
@@ -273,4 +274,16 @@ void CSimplePlayerDlg::OnClose()
 {
 	UninitDS();
 	CDialogEx::OnClose();
+}
+
+
+void CSimplePlayerDlg::OnBnClickedBtbstop()
+{
+	m_pPalyer->Pause();
+}
+
+
+void CSimplePlayerDlg::OnBnClickedBtnrestart()
+{
+	m_pPalyer->Restart();
 }
