@@ -11,7 +11,8 @@ WavePlayer::WavePlayer(LPDIRECTSOUND pDS)
 	m_dwDataSize = 0;
 	m_dwExtraAlloc = 0;
 	m_pWf = NULL;
-	m_bPlaying = FALSE;
+	m_PlayMode = Mode_Stop;
+	//m_pDSBuffer8 = NULL;
 }
 
 
@@ -22,17 +23,39 @@ WavePlayer::~WavePlayer(void)
 
 void WavePlayer::Play(CString strFilePath)
 {
-	if (m_bPlaying)
-		return ;
-	if (!LoadWaveFile(strFilePath)){
+	if (m_hmmio == NULL){
+		if (!LoadWaveFile(strFilePath))
 		 return ;
 	}
-	Begin();
-	m_bPlaying = TRUE;
+	if (m_PlayMode != Mode_Playing)
+		ToPlay();
+	m_PlayMode = Mode_Playing;
 }
 
-void WavePlayer::Begin()
+void WavePlayer::Stop()
 {
+	m_pDSBuffer->Stop();
+	m_pDSBuffer->SetCurrentPosition(0);
+	m_PlayMode = Mode_Stop;
+}
+
+void WavePlayer::Pause()
+{
+	m_pDSBuffer->Stop();
+	m_PlayMode = Mode_Pause;
+}
+
+void WavePlayer::Restart()
+{
+	Stop();
+	m_pDSBuffer->Play(0, 0, 0);
+	m_PlayMode = Mode_Playing;
+}
+
+
+void WavePlayer::ToPlay()
+{
+	m_pDSBuffer->Stop();
 	m_pDSBuffer->SetCurrentPosition(0);
 	m_pDSBuffer->Play(0, 0, 0);
 }
@@ -133,7 +156,7 @@ BOOL WavePlayer::CreateDSBuffer()
 	memset(&desc, 0, sizeof(desc));
 	desc.dwSize = sizeof(desc);
 	desc.dwFlags = 0;
-	desc.dwFlags |= DSBCAPS_STICKYFOCUS | DSBCAPS_GLOBALFOCUS | DSBCAPS_GETCURRENTPOSITION2 | 0xE0;
+	desc.dwFlags |= DSBCAPS_STICKYFOCUS /*| DSBCAPS_GLOBALFOCUS*/ | DSBCAPS_GETCURRENTPOSITION2 | 0xE0;
 	desc.dwBufferBytes = m_dwDataSize;
 	desc.lpwfxFormat = m_pWf;
 	
@@ -141,6 +164,11 @@ BOOL WavePlayer::CreateDSBuffer()
 	if (FAILED(hr)){
 		return FALSE;
 	}
+	//在高版本上可创建LPDIRECTSOUNDBUFFER8
+	//hr = pDSBuffer->QueryInterface(IID_IDirectSound8, (LPVOID*)&m_pDSBuffer8);
+	//if (FAILED(hr)){
+	//	return FALSE;
+	//}
 	BYTE* pData1 = NULL, *pData2 = NULL;
 	DWORD len1 = 0, len2 = 0;
 	hr = m_pDSBuffer->Lock(0,m_dwDataSize, (void**)&pData1, &len1, (void**)&pData2, &len2, 0L);
@@ -166,17 +194,83 @@ BOOL WavePlayer::CreateDSBuffer()
 
 void WavePlayer::Release()
 {
-	if (m_pDSBuffer != NULL){
-		m_pDSBuffer->Release();
-		m_pDSBuffer = NULL;
-	}
-	if (m_pData != NULL){
-		::VirtualFree(m_pData, m_dwDataSize, MEM_DECOMMIT);
-		m_pData = NULL;
+	if (m_hmmio != NULL){
+		::mmioClose(m_hmmio, 0);
+		m_hmmio = NULL;
 	}
 	if (m_pWf != NULL){
 		::VirtualFree(m_pWf, sizeof(WAVEFORMATEX) + m_dwExtraAlloc, MEM_DECOMMIT);
 		m_pWf = NULL;
 	}
-	::mmioClose(m_hmmio, 0);
+	if (m_pData != NULL){
+		::VirtualFree(m_pData, m_dwDataSize, MEM_DECOMMIT);
+		m_pData = NULL;
+	}
+	if (m_pDSBuffer != NULL){
+		m_pDSBuffer->Stop();
+		m_pDSBuffer->Release();
+		m_pDSBuffer = NULL;
+	}
+}
+
+void WavePlayer::testNotify()
+{
+// 	if (m_hEvent == NULL){//在别的地方创建这个事件
+// 		m_hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+// 		if (m_hEvent == NULL){
+// 			return ;
+// 		}
+// 	}
+	LPDIRECTSOUNDNOTIFY lpDSNotify;
+	if (FAILED(m_pDSBuffer->QueryInterface(IID_IDirectSoundNotify, (void**)&lpDSNotify)))
+		return ;
+	DSBPOSITIONNOTIFY notify;
+	notify.dwOffset = DSBPN_OFFSETSTOP;
+	notify.hEventNotify = m_hEvent;
+	lpDSNotify->SetNotificationPositions(1, &notify);
+	lpDSNotify->Release();
+}
+
+void WavePlayer::RestorBuffer()
+{
+	LPBYTE  pbData;
+	LPBYTE  pbData2;
+	DWORD   dwLen;
+	DWORD   dwLen2;
+	BOOL    bOK;
+	HRESULT hr;
+
+	bOK = FALSE;
+	pbData = NULL;
+	pbData2 = NULL;
+	hr = m_pDSBuffer->Restore();
+
+	if(hr == DS_OK) 
+	{
+		// Lock the buffer. 
+		hr = m_pDSBuffer->Lock(0, m_dwDataSize, (void**)&pbData, 
+			&dwLen, (void**)&pbData2, &dwLen2, 0);
+
+		if(hr == DS_OK) 
+		{
+			ASSERT(pbData != NULL);
+			ASSERT(m_pData != NULL);
+
+			//Copy the buffer
+			memcpy(pbData, m_pData, m_dwDataSize);
+
+			//Unlock the buffer
+			hr = m_pDSBuffer->Unlock(pbData, dwLen, NULL, 0);
+
+			if(hr == DS_OK) 
+			{
+				//This is playing
+				if (m_PlayMode == Mode_Playing){
+					m_pDSBuffer->Play(0,0,0);
+				}
+				bOK = TRUE;
+			}
+		}
+
+	}
 }

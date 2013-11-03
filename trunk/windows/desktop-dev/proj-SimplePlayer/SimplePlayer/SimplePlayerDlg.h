@@ -46,4 +46,6 @@ private:
 	WavePlayer *m_pPalyer;
 public:
 	afx_msg void OnClose();
+	afx_msg void OnBnClickedBtbstop();
+	afx_msg void OnBnClickedBtnrestart();
 };
