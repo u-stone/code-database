@@ -24,8 +24,9 @@ WavePlayer::~WavePlayer(void)
 void WavePlayer::Play(CString strFilePath)
 {
 	if (m_hmmio == NULL){
-		if (!LoadWaveFile(strFilePath))
-		 return ;
+		if (!LoadWaveFile(strFilePath)){
+			return ;
+		}
 	}
 	if (m_PlayMode != Mode_Playing)
 		ToPlay();
@@ -34,30 +35,38 @@ void WavePlayer::Play(CString strFilePath)
 
 void WavePlayer::Stop()
 {
-	m_pDSBuffer->Stop();
-	m_pDSBuffer->SetCurrentPosition(0);
-	m_PlayMode = Mode_Stop;
+	if (m_pDSBuffer != NULL){
+		m_pDSBuffer->Stop();
+		m_pDSBuffer->SetCurrentPosition(0);
+		m_PlayMode = Mode_Stop;
+	}
 }
 
 void WavePlayer::Pause()
 {
-	m_pDSBuffer->Stop();
-	m_PlayMode = Mode_Pause;
+	if (m_pDSBuffer != NULL){
+		m_pDSBuffer->Stop();
+		m_PlayMode = Mode_Pause;
+	}
 }
 
 void WavePlayer::Restart()
 {
 	Stop();
-	m_pDSBuffer->Play(0, 0, 0);
-	m_PlayMode = Mode_Playing;
+	if (m_pDSBuffer != NULL){
+		m_pDSBuffer->Play(0, 0, 0);
+		m_PlayMode = Mode_Playing;
+	}
 }
 
 
 void WavePlayer::ToPlay()
 {
-	m_pDSBuffer->Stop();
-	m_pDSBuffer->SetCurrentPosition(0);
-	m_pDSBuffer->Play(0, 0, 0);
+	if (m_pDSBuffer != NULL){
+		m_pDSBuffer->Stop();
+		m_pDSBuffer->SetCurrentPosition(0);
+		m_pDSBuffer->Play(0, 0, 0);
+	}
 }
 
 
@@ -67,79 +76,100 @@ BOOL WavePlayer::LoadWaveFile(CString strFilePath)
 	m_hmmio = ::mmioOpen(lpstrFile, NULL, MMIO_ALLOCBUF | MMIO_READ);
 	if (m_hmmio == NULL)
 		return FALSE;
-	MMCKINFO ckRiff;
-	if (::mmioDescend(m_hmmio, &ckRiff, NULL, 0) != MMSYSERR_NOERROR)
-		return FALSE;
-	if (ckRiff.ckid != FOURCC_RIFF || ckRiff.fccType != mmioFOURCC('W', 'A', 'V', 'E'))
-		return FALSE;
-	MMCKINFO ckfmt;
-	ckfmt.ckid = mmioFOURCC('f', 'm', 't', ' ');
-	if (::mmioDescend(m_hmmio, &ckfmt, &ckRiff, MMIO_FINDCHUNK) != MMSYSERR_NOERROR)
-		return FALSE;
-	if (ckfmt.cksize < (DWORD)sizeof(PCMWAVEFORMAT)){
-		return FALSE;
-	}
-	PCMWAVEFORMAT fmt;
-	if (::mmioRead(m_hmmio, (HPSTR)&fmt, sizeof(fmt)) != sizeof(fmt)){
-		return FALSE;
-	}
+	WAVEFORMATEX* pwf = NULL;
+	BYTE* pData = NULL;
 	WORD dwExtraAlloc = 0;
-	if (fmt.wf.wFormatTag == WAVE_FORMAT_PCM){
-		dwExtraAlloc = 0;
-	} else {
-		if (::mmioRead(m_hmmio, (HPSTR)&dwExtraAlloc, sizeof(dwExtraAlloc)) != sizeof(dwExtraAlloc)){
-			return FALSE;
+	DWORD datasize = 0;
+	try{
+		MMCKINFO ckRiff;
+		if (::mmioDescend(m_hmmio, &ckRiff, NULL, 0) != MMSYSERR_NOERROR){
+			throw _T("throw find riff error");
 		}
-	}
-	WAVEFORMATEX* pwf = (WAVEFORMATEX*)::VirtualAlloc(NULL, sizeof(WAVEFORMATEX) + dwExtraAlloc, MEM_COMMIT, PAGE_READWRITE);
-	if (pwf == NULL){
-		return FALSE;
-	}
-	memcpy(pwf, &fmt, sizeof(fmt));
-	pwf->cbSize = dwExtraAlloc;
-	if (dwExtraAlloc != 0){
-		if (::mmioRead(m_hmmio, (HPSTR)((BYTE*)(&pwf->cbSize) + dwExtraAlloc), sizeof(dwExtraAlloc)) != sizeof(dwExtraAlloc)){
-			return FALSE;
+		if (ckRiff.ckid != FOURCC_RIFF || ckRiff.fccType != mmioFOURCC('W', 'A', 'V', 'E')){
+			throw _T("throw find wave chunk error");
 		}
-	}
-	if (::mmioAscend(m_hmmio, &ckfmt, 0) != MMSYSERR_NOERROR){
-		return FALSE;
-	}
-	if (::mmioSeek(m_hmmio, ckRiff.dwDataOffset + sizeof(FOURCC), SEEK_SET) == -1){
-		return FALSE;
-	}
-	MMCKINFO ckdata;
-	ckdata.ckid = mmioFOURCC('d', 'a', 't', 'a');
-	if (::mmioDescend(m_hmmio, &ckdata, &ckRiff, MMIO_FINDCHUNK) != MMSYSERR_NOERROR){
-		return FALSE;
-	}
-	DWORD datasize = ckdata.cksize;
-	BYTE* pData = (BYTE*)::VirtualAlloc(NULL, datasize, MEM_COMMIT, PAGE_READWRITE);
-	if (pData == NULL){
-		return FALSE;
-	}
-	MMIOINFO mmioinfo;
-	if (::mmioGetInfo(m_hmmio, &mmioinfo, 0) != MMSYSERR_NOERROR){
-		return FALSE;
-	}
-	ckdata.cksize = 0;
-	for (DWORD tmp = 0; tmp < datasize; tmp++){
-		if (mmioinfo.pchNext == mmioinfo.pchEndRead){
-			if (::mmioAdvance(m_hmmio, &mmioinfo, MMIO_READ) != MMSYSERR_NOERROR){
-				return FALSE;
+		MMCKINFO ckfmt;
+		ckfmt.ckid = mmioFOURCC('f', 'm', 't', ' ');
+		if (::mmioDescend(m_hmmio, &ckfmt, &ckRiff, MMIO_FINDCHUNK) != MMSYSERR_NOERROR){
+			throw _T("throw find fmt chunk error");
+		}
+		if (ckfmt.cksize < (DWORD)sizeof(PCMWAVEFORMAT)){
+			throw _T("throw fmt chunk data error");
+		}
+		PCMWAVEFORMAT fmt;
+		if (::mmioRead(m_hmmio, (HPSTR)&fmt, sizeof(fmt)) != sizeof(fmt)){
+			throw _T("throw read fmt chunk error");
+		}
+		if (fmt.wf.wFormatTag == WAVE_FORMAT_PCM){
+			dwExtraAlloc = 0;
+		} else {
+			if (::mmioRead(m_hmmio, (HPSTR)&dwExtraAlloc, sizeof(dwExtraAlloc)) != sizeof(dwExtraAlloc)){
+				throw _T("throw read extra alloc error");
 			}
+		}
+		pwf = (WAVEFORMATEX*)::VirtualAlloc(NULL, sizeof(WAVEFORMATEX) + dwExtraAlloc, MEM_COMMIT, PAGE_READWRITE);
+		if (pwf == NULL){
+			throw _T("throw VirtualAlloc pwf");
+		}
+		memcpy(pwf, &fmt, sizeof(fmt));
+		pwf->cbSize = dwExtraAlloc;
+		if (dwExtraAlloc != 0){
+			if (::mmioRead(m_hmmio, (HPSTR)((BYTE*)(&pwf->cbSize) + dwExtraAlloc), sizeof(dwExtraAlloc)) != sizeof(dwExtraAlloc)){
+				throw _T("read extradata error");
+			}
+		}
+		if (::mmioAscend(m_hmmio, &ckfmt, 0) != MMSYSERR_NOERROR){
+			throw _T("throw jump out of fmt chunk error");
+		}
+		if (::mmioSeek(m_hmmio, ckRiff.dwDataOffset + sizeof(FOURCC), SEEK_SET) == -1){
+			throw _T("throw seek data chunk error");
+		}
+		MMCKINFO ckdata;
+		ckdata.ckid = mmioFOURCC('d', 'a', 't', 'a');
+		if (::mmioDescend(m_hmmio, &ckdata, &ckRiff, MMIO_FINDCHUNK) != MMSYSERR_NOERROR){
+			throw _T("throw find data chunk error");
+		}
+		datasize = ckdata.cksize;
+		pData = (BYTE*)::VirtualAlloc(NULL, datasize, MEM_COMMIT, PAGE_READWRITE);
+		if (pData == NULL){
+			throw _T("throw VirualAlloc error");
+		}
+		MMIOINFO mmioinfo;
+		if (::mmioGetInfo(m_hmmio, &mmioinfo, 0) != MMSYSERR_NOERROR){
+			throw _T("throw getinfo error");
+		}
+		ckdata.cksize = 0;
+		for (DWORD tmp = 0; tmp < datasize; tmp++){
 			if (mmioinfo.pchNext == mmioinfo.pchEndRead){
-				return FALSE;
+				if (::mmioAdvance(m_hmmio, &mmioinfo, MMIO_READ) != MMSYSERR_NOERROR){
+					throw _T("throw read data into buffer error");
+				}
+				if (mmioinfo.pchNext == mmioinfo.pchEndRead){
+					throw _T("throw read data error");
+				}
 			}
+			*(pData + tmp) = *mmioinfo.pchNext;
+			mmioinfo.pchNext++;
 		}
-		*(pData + tmp) = *mmioinfo.pchNext;
-		mmioinfo.pchNext++;
+		m_pData = pData;
+		m_dwDataSize = datasize;
+		m_pWf = pwf;
+		m_dwExtraAlloc = dwExtraAlloc;
+	} catch (...){
+		if (m_hmmio != NULL){
+			::mmioClose(m_hmmio, 0);
+			m_hmmio = NULL;
+		}
+		if (pwf != NULL){
+			::VirtualFree(pwf, sizeof(WAVEFORMATEX) + dwExtraAlloc, MEM_DECOMMIT);
+			pwf = NULL;
+		}
+		if (pData != NULL){
+			::VirtualFree(pData, datasize, MEM_DECOMMIT);
+			pData = NULL;
+		}
+		return FALSE;
 	}
-	m_pData = pData;
-	m_dwDataSize = datasize;
-	m_pWf = pwf;
-	m_dwExtraAlloc = dwExtraAlloc;
-	
 	//创建辅助缓存对象
 	return CreateDSBuffer();
 }

@@ -170,21 +170,22 @@ void CSimplePlayerDlg::OnBnClickedBtnopenfile()
 
 void CSimplePlayerDlg::OnBnClickedBtnplay()
 {
-	if (m_pPalyer == NULL)
-		m_pPalyer = new WavePlayer(m_pIDS);
-	CString strFilePath;
-	GetDlgItem(IDC_EdtFilePath)->GetWindowText(strFilePath);	
-	m_pPalyer->Play(strFilePath);
+	if (m_pPlayer == NULL)
+		m_pPlayer = new WavePlayer(m_pIDS);
+	if (m_pPlayer != NULL){
+		CString strFilePath;
+		GetDlgItem(IDC_EdtFilePath)->GetWindowText(strFilePath);	
+		m_pPlayer->Play(strFilePath);
+	}
 }
 
 void CSimplePlayerDlg::InitMember()
 {
 	m_hPlayer = NULL;
-	m_pPalyer = NULL;
+	m_pPlayer = NULL;
 	m_bInit = FALSE;
 	m_pIDS = NULL;
 }
-
 
 BOOL CSimplePlayerDlg::InitDS()
 {
@@ -212,9 +213,9 @@ BOOL CSimplePlayerDlg::InitDS()
 
 BOOL CSimplePlayerDlg::UninitDS()
 {
-	if (m_pPalyer != NULL){
-		delete m_pPalyer;
-		m_pPalyer = NULL;
+	if (m_pPlayer != NULL){
+		delete m_pPlayer;
+		m_pPlayer = NULL;
 	}
 	if (m_pIDS != NULL){//必须后释放设备，否则会出现释放错误
 		CoUninitialize();
@@ -279,11 +280,13 @@ void CSimplePlayerDlg::OnClose()
 
 void CSimplePlayerDlg::OnBnClickedBtbstop()
 {
-	m_pPalyer->Pause();
+	if (m_pPlayer != NULL)
+		m_pPlayer->Pause();
 }
 
 
 void CSimplePlayerDlg::OnBnClickedBtnrestart()
 {
-	m_pPalyer->Restart();
+	if (m_pPlayer != NULL)
+		m_pPlayer->Restart();
 }
