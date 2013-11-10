@@ -43,7 +43,9 @@ private:
 	LPDIRECTSOUND m_pIDS;
 	LPDIRECTSOUNDBUFFER m_pPrimaryBuffer;
 	HWND m_hPlayer;
-	WavePlayer *m_pPalyer;
+
+	WavePlayer *m_pPlayer;
+
 public:
 	afx_msg void OnClose();
 	afx_msg void OnBnClickedBtbstop();
