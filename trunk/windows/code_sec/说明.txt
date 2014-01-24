@@ -1,0 +1,3 @@
+1. ShellExecuteEx.txt  写的是ShellExecuteEx函数的用法
+
+2. WebPageReminder类写的是一个给定url就开启线程刷新的类

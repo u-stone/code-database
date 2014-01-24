@@ -1,0 +1,17 @@
+	SHELLEXECUTEINFO si;
+	si.cbSize = sizeof(si);
+	si.fMask = 0;
+	si.hwnd = NULL;
+	si.lpVerb = _T("runas");//关键是这里，不是一般的open。
+	si.lpFile = _T("ProcToBeCalled.exe");//指定要调用的程序
+	si.lpParameters = strCmd;//设置参数
+	si.lpDirectory = path;
+	si.nShow = SW_SHOWNORMAL;
+	si.hInstApp = NULL;
+	si.lpIDList = NULL;
+	si.lpClass = NULL;
+	si.hkeyClass = NULL;
+	si.dwHotKey = 0;
+	si.hIcon = NULL;
+	si.hProcess = NULL;
+	ShellExecuteEx(&si);
