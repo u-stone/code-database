@@ -13,6 +13,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OverlappedSocket_Server", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OverlappedSocket_Client", "OverlappedSocket_Client\OverlappedSocket_Client.vcxproj", "{B9FAAE83-FA9D-4743-96D7-93FD54494DD9}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OverlappedCompleteRoutineSocket_Client", "OverlappedCompleteRoutineSocket_Client\OverlappedCompleteRoutineSocket_Client.vcxproj", "{827C74BB-8238-42AF-8B40-815BFF91590E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OverlappedCompleteRoutinSocket_Server", "OverlappedCompleteRoutinSocket_Server\OverlappedCompleteRoutinSocket_Server.vcxproj", "{240D5270-13E6-4839-8F93-A7A2DAADB6A3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IOCP_server", "IOCP_server\IOCP_server.vcxproj", "{AA1D19E6-504A-47C9-B71C-420E385AF1D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -43,6 +49,18 @@ Global
 		{B9FAAE83-FA9D-4743-96D7-93FD54494DD9}.Debug|Win32.Build.0 = Debug|Win32
 		{B9FAAE83-FA9D-4743-96D7-93FD54494DD9}.Release|Win32.ActiveCfg = Release|Win32
 		{B9FAAE83-FA9D-4743-96D7-93FD54494DD9}.Release|Win32.Build.0 = Release|Win32
+		{827C74BB-8238-42AF-8B40-815BFF91590E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{827C74BB-8238-42AF-8B40-815BFF91590E}.Debug|Win32.Build.0 = Debug|Win32
+		{827C74BB-8238-42AF-8B40-815BFF91590E}.Release|Win32.ActiveCfg = Release|Win32
+		{827C74BB-8238-42AF-8B40-815BFF91590E}.Release|Win32.Build.0 = Release|Win32
+		{240D5270-13E6-4839-8F93-A7A2DAADB6A3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{240D5270-13E6-4839-8F93-A7A2DAADB6A3}.Debug|Win32.Build.0 = Debug|Win32
+		{240D5270-13E6-4839-8F93-A7A2DAADB6A3}.Release|Win32.ActiveCfg = Release|Win32
+		{240D5270-13E6-4839-8F93-A7A2DAADB6A3}.Release|Win32.Build.0 = Release|Win32
+		{AA1D19E6-504A-47C9-B71C-420E385AF1D1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AA1D19E6-504A-47C9-B71C-420E385AF1D1}.Debug|Win32.Build.0 = Debug|Win32
+		{AA1D19E6-504A-47C9-B71C-420E385AF1D1}.Release|Win32.ActiveCfg = Release|Win32
+		{AA1D19E6-504A-47C9-B71C-420E385AF1D1}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
