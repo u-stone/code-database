@@ -30,7 +30,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	hints.ai_protocol = IPPROTO_TCP;
 
 	int ret = getaddrinfo(ip, port, &hints, &addrs);
-	if (ret == SOCKET_ERROR){
+	if (ret != 0){
 		return -1;
 	}
 	SOCKET sock_con = INVALID_SOCKET;
