@@ -28,10 +28,11 @@ typedef struct _PER_HANDLE_DATA{
 }PER_HANDLE_DATA, * LPPER_HANDLE_DATA;
 
 typedef struct{
-	WSAOVERLAPPED ol;
 	WSABUF     buf;
+	WSAOVERLAPPED ol;
 	int        buflen;
 	int        optype;
+	//int        dummy[1024];
 }PER_IO_DATA, *LPPER_IO_DATA;
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -94,7 +95,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		closesocket(sock_lis);
 		return -1;
 	}
+
 	//////////////////////////////////////////////////////////////////////////
+
 	HANDLE hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
 	SYSTEM_INFO si;
 	GetSystemInfo(&si);
@@ -103,6 +106,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	char bufrecv[DATA_BUFSIZE] = "i'm server";
+	char bufsend[DATA_BUFSIZE] = "i'm server";
 
 	DWORD bytesrecv = 0, flags = 0;
 	while (1){
@@ -116,9 +120,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			cout << "error : " << ret << endl;
 			break;
 		}
-		//sock_con = WSAAccept(sock_lis, (SOCKADDR*)&saRemote, &remote_len, NULL, NULL);
 		phd = (LPPER_HANDLE_DATA)GlobalAlloc(GPTR, sizeof(PER_HANDLE_DATA));
-		//cout << "socket number connected: " << sock_con << endl;
 		phd->sock = sock_con;
 		memcpy(&phd->client_addr, &saRemote, remote_len);
 		LPPER_IO_DATA piod = (LPPER_IO_DATA)GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
@@ -126,9 +128,26 @@ int _tmain(int argc, _TCHAR* argv[])
 		piod->buf.len = DATA_BUFSIZE;
 		piod->buflen = 1;
 		piod->optype = RECV_POSTED;
+		memset(&piod->ol, 0, sizeof(piod->ol));
 
 		CreateIoCompletionPort((HANDLE)sock_con, hcp, (DWORD)phd, 0);
 		if (WSARecv(sock_con, &(piod->buf), 1, &bytesrecv, &flags, &(piod->ol), NULL) == SOCKET_ERROR){
+			if (WSAGetLastError() != WSA_IO_PENDING){
+				ret = WSAGetLastError();
+				cout << ret << endl;
+				return 2; 
+			}
+		}
+
+		LPPER_IO_DATA piodsend = (LPPER_IO_DATA)GlobalAlloc(GPTR, sizeof(PER_IO_DATA));
+		piodsend->buf.buf = bufsend;
+		piodsend->buf.len = DATA_BUFSIZE;
+		piodsend->buflen = 1;
+		piodsend->optype = SEND_POSTED;
+		memset(&piodsend->ol, 0, sizeof(piodsend->ol));
+
+		CreateIoCompletionPort((HANDLE)sock_con, hcp, (DWORD)phd, 0);
+		if (WSASend(sock_con, &(piodsend->buf), 1, &bytesrecv, flags, &(piodsend->ol), NULL) == SOCKET_ERROR){
 			if (WSAGetLastError() != WSA_IO_PENDING){
 				ret = WSAGetLastError();
 				cout << ret << endl;
@@ -146,12 +165,14 @@ DWORD WINAPI WorkThread(LPVOID lpParam){
 	//OVERLAPPED ol;
 	LPPER_HANDLE_DATA phd;
 	LPPER_IO_DATA piod;
+	WSAOVERLAPPED *pol;
 	DWORD bytessend, bytesrecv;
 	DWORD flags;
-	DWORD ret ;
-	char bufrecv[DATA_BUFSIZE],	bufsend[DATA_BUFSIZE];
+	char bufrecv[DATA_BUFSIZE],	bufsend[DATA_BUFSIZE] = "i'm server";
 	while (1) {
-		ret = GetQueuedCompletionStatus(hcp, &bytestransf, (LPDWORD)&phd, (LPOVERLAPPED*)&piod, INFINITE);
+		if (!GetQueuedCompletionStatus(hcp, &bytestransf, (LPDWORD)&phd, &pol, INFINITE))
+			continue ;
+		piod = CONTAINING_RECORD(pol, PER_IO_DATA, ol);
 		if (bytestransf == 0 && (piod->optype == RECV_POSTED || piod->optype == SEND_POSTED)){
 			closesocket(phd->sock);
 			GlobalFree(phd);
@@ -168,7 +189,7 @@ DWORD WINAPI WorkThread(LPVOID lpParam){
 			piod->optype = RECV_POSTED;
 			if (WSARecv(phd->sock, &piod->buf, 1, &bytesrecv, &flags, &(piod->ol), NULL) == SOCKET_ERROR){
 				if (WSAGetLastError() != WSA_IO_PENDING){
-					cout << "error" << endl;
+					cout << "error" << WSAGetLastError() << endl;
 					return 1;
 				}
 			}
@@ -180,8 +201,8 @@ DWORD WINAPI WorkThread(LPVOID lpParam){
 			piod->buf.len = DATA_BUFSIZE;
 			piod->optype = SEND_POSTED;
 			if (WSASend(phd->sock, &piod->buf, 1, &bytessend, flags, &(piod->ol), NULL) == SOCKET_ERROR){
-				if (WSAGetLastError() == WSA_IO_PENDING){
-					cout << "error : " << endl;
+				if (WSAGetLastError() != WSA_IO_PENDING){
+					cout << "error" << WSAGetLastError() << endl;
 					return 2;
 				}
 			}

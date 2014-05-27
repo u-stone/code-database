@@ -17,7 +17,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	hints.ai_flags = AI_PASSIVE;
 
 	int ret = getaddrinfo(NULL, argv1, &hints, &addrs);
-	if (ret == SOCKET_ERROR){
+	if (ret != 0){
 		return -2;
 	}
 	SOCKET sock_lis = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);

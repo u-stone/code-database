@@ -40,7 +40,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	char* ip = "127.0.0.1";
 	char* port = "9999";
 	int ret = getaddrinfo(ip, port, &hints, &addrs);
-	if (ret == SOCKET_ERROR){
+	if (ret != 0){
 		cout << "getaddrinfo error" << endl;
 		return -1;
 	}
